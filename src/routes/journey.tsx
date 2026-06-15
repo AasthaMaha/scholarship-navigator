@@ -377,66 +377,118 @@ function StepOnboarding() {
   );
 }
 
+function SidebarProfile() {
+  const { profile, isCustom } = useP();
+  return (
+    <div className="px-6 py-5 border-b border-border">
+      <div className="flex items-center gap-3">
+        <div className="size-10 rounded-full bg-primary text-primary-foreground grid place-items-center font-display">
+          {profile.initials}
+        </div>
+        <div className="min-w-0">
+          <div className="text-sm font-medium truncate">{profile.name}</div>
+          <div className="text-xs text-muted-foreground truncate">{profile.level}</div>
+        </div>
+      </div>
+      <Link
+        to="/start"
+        className="mt-3 inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+      >
+        {isCustom ? "✎ Edit my profile" : "✎ Use my own profile"}
+      </Link>
+    </div>
+  );
+}
+
 function StepProfile() {
+  const { profile, isCustom } = useP();
+  const experienceLines = profile.experiences.split("\n").map((l) => l.trim()).filter(Boolean);
+  const awardLines = profile.awards.split("\n").map((l) => l.trim()).filter(Boolean);
+  const completion = Math.min(
+    100,
+    Math.round(
+      ((profile.name ? 1 : 0) +
+        (profile.school ? 1 : 0) +
+        (profile.gpa ? 1 : 0) +
+        (profile.major ? 1 : 0) +
+        (profile.careerGoal ? 1 : 0) +
+        (profile.shortBio ? 1 : 0) +
+        (experienceLines.length ? 1 : 0) +
+        (profile.identity.length ? 1 : 0)) *
+        12.5
+    )
+  );
   return (
     <div className="grid md:grid-cols-3 gap-6">
       <Card className="md:col-span-1">
         <div className="size-16 rounded-2xl bg-primary text-primary-foreground grid place-items-center font-display text-2xl">
-          {persona.initials}
+          {profile.initials}
         </div>
-        <div className="mt-4 font-display text-xl">{persona.name}</div>
-        <div className="text-sm text-muted-foreground">{persona.pronouns}</div>
-        <div className="mt-4 space-y-1.5">
-          <Pill tone="gold">First-generation</Pill>{" "}
-          <Pill tone="gold">Pell-eligible</Pill>{" "}
-          <Pill>Texas resident</Pill>
+        <div className="mt-4 font-display text-xl">{profile.name}</div>
+        <div className="text-sm text-muted-foreground">{profile.school}</div>
+        <div className="mt-4 flex flex-wrap gap-1.5">
+          {profile.firstGen && <Pill tone="gold">First-generation</Pill>}
+          {profile.pellEligible && <Pill tone="gold">Pell-eligible</Pill>}
+          {profile.location && <Pill>{profile.location}</Pill>}
         </div>
         <div className="mt-5 text-sm text-muted-foreground">
-          <span className="text-foreground font-medium">87%</span> complete — strong applications need a complete profile.
+          <span className="text-foreground font-medium">{completion}%</span> complete — strong applications need a complete profile.
         </div>
         <div className="mt-2 h-1.5 rounded-full bg-secondary overflow-hidden">
-          <div className="h-full bg-gold" style={{ width: "87%" }} />
+          <div className="h-full bg-gold transition-all" style={{ width: `${completion}%` }} />
         </div>
+        <Link
+          to="/start"
+          className="mt-5 inline-flex w-full justify-center rounded-full border border-border bg-card px-3 py-2 text-xs hover:bg-accent"
+        >
+          {isCustom ? "Edit my profile" : "Start with my profile →"}
+        </Link>
       </Card>
 
       <Card className="md:col-span-2">
         <div className="text-xs uppercase tracking-widest text-muted-foreground">Academic profile</div>
         <div className="mt-3">
-          <FieldRow label="School" value={persona.school} />
-          <FieldRow label="Education level" value={persona.level} />
-          <FieldRow label="Major / Minor" value={`${persona.major} / ${persona.minor}`} />
-          <FieldRow label="GPA" value={persona.gpa} />
-          <FieldRow label="Location" value={`${persona.location} (from ${persona.hometown})`} />
-          <FieldRow label="Email" value={persona.email} />
+          <FieldRow label="School" value={profile.school} />
+          <FieldRow label="Education level" value={profile.level} />
+          <FieldRow label="Major" value={profile.major} />
+          <FieldRow label="GPA" value={profile.gpa} />
+          <FieldRow label="Location" value={profile.location} />
         </div>
+
+        <div className="mt-6 text-xs uppercase tracking-widest text-muted-foreground">Short bio</div>
+        <p className="mt-2 text-sm text-foreground/90">{profile.shortBio}</p>
 
         <div className="mt-6 text-xs uppercase tracking-widest text-muted-foreground">Career goal</div>
-        <p className="mt-2 text-sm text-foreground/90">{persona.careerGoal}</p>
+        <p className="mt-2 text-sm text-foreground/90">{profile.careerGoal}</p>
 
-        <div className="mt-6 text-xs uppercase tracking-widest text-muted-foreground">Experiences</div>
-        <div className="mt-3 grid sm:grid-cols-2 gap-3">
-          {[
-            ["Research", persona.experiences.research],
-            ["Leadership", persona.experiences.leadership],
-            ["Work", persona.experiences.work],
-            ["Volunteer", persona.experiences.volunteer],
-          ].map(([label, arr]) => (
-            <div key={label as string} className="rounded-xl bg-secondary/40 p-3">
-              <div className="text-xs font-medium text-muted-foreground">{label as string}</div>
-              {(arr as { title: string; when: string }[]).map((e) => (
-                <div key={e.title} className="mt-2 text-sm">
-                  <div className="font-medium leading-tight">{e.title}</div>
-                  <div className="text-xs text-muted-foreground">{e.when}</div>
-                </div>
-              ))}
+        {profile.identity.length > 0 && (
+          <>
+            <div className="mt-6 text-xs uppercase tracking-widest text-muted-foreground">Identity</div>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {profile.identity.map((i) => <Pill key={i}>{i}</Pill>)}
             </div>
-          ))}
-        </div>
+          </>
+        )}
 
-        <div className="mt-6 text-xs uppercase tracking-widest text-muted-foreground">Awards</div>
-        <ul className="mt-2 text-sm space-y-1 text-foreground/90 list-disc pl-5">
-          {persona.experiences.awards.map((a) => <li key={a}>{a}</li>)}
-        </ul>
+        {experienceLines.length > 0 && (
+          <>
+            <div className="mt-6 text-xs uppercase tracking-widest text-muted-foreground">Experiences</div>
+            <ul className="mt-2 text-sm space-y-1.5 text-foreground/90">
+              {experienceLines.map((e) => (
+                <li key={e} className="flex gap-2"><span className="text-gold">•</span>{e}</li>
+              ))}
+            </ul>
+          </>
+        )}
+
+        {awardLines.length > 0 && (
+          <>
+            <div className="mt-6 text-xs uppercase tracking-widest text-muted-foreground">Awards</div>
+            <ul className="mt-2 text-sm space-y-1 text-foreground/90 list-disc pl-5">
+              {awardLines.map((a) => <li key={a}>{a}</li>)}
+            </ul>
+          </>
+        )}
       </Card>
     </div>
   );
