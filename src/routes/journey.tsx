@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
 import {
   persona,
   journeySteps,
@@ -10,6 +10,28 @@ import {
   essayFeedback,
   submissionChecklist,
 } from "@/lib/persona";
+import { useProfile, type UserProfile } from "@/lib/profile-store";
+
+const ProfileCtx = createContext<{ profile: UserProfile; isCustom: boolean }>({
+  profile: {
+    name: persona.name,
+    initials: persona.initials,
+    level: persona.level,
+    school: persona.school,
+    location: persona.location,
+    major: persona.major,
+    gpa: persona.gpa,
+    firstGen: persona.firstGen,
+    pellEligible: persona.pellEligible,
+    identity: persona.identity,
+    careerGoal: persona.careerGoal,
+    shortBio: persona.shortBio,
+    experiences: "",
+    awards: persona.experiences.awards.join("\n"),
+  },
+  isCustom: false,
+});
+const useP = () => useContext(ProfileCtx);
 
 export const Route = createFileRoute("/journey")({
   head: () => ({
