@@ -48,27 +48,30 @@ export const Route = createFileRoute("/journey")({
 });
 
 function Journey() {
+  const { profile, isCustom } = useProfile();
   const [stepIdx, setStepIdx] = useState(0);
   const step = journeySteps[stepIdx];
   const goNext = () => setStepIdx((i) => Math.min(i + 1, journeySteps.length - 1));
   const goPrev = () => setStepIdx((i) => Math.max(i - 1, 0));
 
   return (
-    <div className="min-h-screen flex">
-      <Sidebar activeIdx={stepIdx} onSelect={setStepIdx} />
-      <div className="flex-1 flex flex-col min-w-0">
-        <TopBar step={step} onNext={goNext} onPrev={goPrev} stepIdx={stepIdx} />
-        <main className="flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-5xl px-6 md:px-10 py-10">
-            <StepHeader step={step} />
-            <div className="mt-8">
-              <StepBody slug={step.slug} />
+    <ProfileCtx.Provider value={{ profile, isCustom }}>
+      <div className="min-h-screen flex">
+        <Sidebar activeIdx={stepIdx} onSelect={setStepIdx} />
+        <div className="flex-1 flex flex-col min-w-0">
+          <TopBar step={step} onNext={goNext} onPrev={goPrev} stepIdx={stepIdx} />
+          <main className="flex-1 overflow-y-auto">
+            <div className="mx-auto max-w-5xl px-6 md:px-10 py-10">
+              <StepHeader step={step} />
+              <div className="mt-8">
+                <StepBody slug={step.slug} />
+              </div>
+              <Nav stepIdx={stepIdx} onNext={goNext} onPrev={goPrev} />
             </div>
-            <Nav stepIdx={stepIdx} onNext={goNext} onPrev={goPrev} />
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
-    </div>
+    </ProfileCtx.Provider>
   );
 }
 
