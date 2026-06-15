@@ -980,26 +980,62 @@ function StepFit() {
 }
 
 function StepMaterials() {
+  const { user, updateProfile } = useUser();
+  const docs = user?.documents ?? [];
+
+  function addDoc(kind: string, file: File) {
+    updateProfile({ documents: [...docs, { name: file.name, kind }] });
+  }
+  function removeDoc(name: string) {
+    updateProfile({ documents: docs.filter((d) => d.name !== name) });
+  }
+
+  const kinds = ["Resume", "Transcript", "Recommendation letter", "Other"];
+
   return (
     <div className="space-y-4">
       <Card>
         <div className="text-xs uppercase tracking-widest text-muted-foreground">Your document vault</div>
-        <div className="mt-4 divide-y divide-border">
-          {persona.documents.map((d) => (
-            <div key={d.name} className="py-3 flex items-center gap-4">
-              <div className={`size-10 rounded-lg grid place-items-center text-xs font-mono ${d.uploaded ? "bg-success/15 text-success" : "bg-warning/20 text-foreground"}`}>
-                {d.uploaded ? "✓" : "!"}
+        {docs.length === 0 ? (
+          <div className="mt-4 text-sm text-muted-foreground">
+            No documents yet. Upload anything that supports your application — resume, transcript, recommendation letters.
+          </div>
+        ) : (
+          <div className="mt-4 divide-y divide-border">
+            {docs.map((d) => (
+              <div key={d.name} className="py-3 flex items-center gap-4">
+                <div className="size-10 rounded-lg bg-success/15 text-success grid place-items-center text-xs font-mono">✓</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium truncate">{d.name}</div>
+                  <div className="text-xs text-muted-foreground">{d.kind}</div>
+                </div>
+                <button
+                  onClick={() => removeDoc(d.name)}
+                  className="text-xs text-muted-foreground hover:text-destructive"
+                >
+                  Remove
+                </button>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium truncate">{d.name}</div>
-                <div className="text-xs text-muted-foreground">{d.kind} · {d.size}</div>
-              </div>
-              {d.uploaded ? <Pill tone="success">Uploaded</Pill> : <Pill tone="warn">Missing</Pill>}
-            </div>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-5 grid sm:grid-cols-2 gap-3">
+          {kinds.map((k) => (
+            <label key={k} className="rounded-xl border-2 border-dashed border-border p-4 text-sm cursor-pointer hover:bg-accent">
+              <div className="text-xs uppercase tracking-widest text-muted-foreground">Upload</div>
+              <div className="font-medium mt-1">{k}</div>
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx,.png,.jpg"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) addDoc(k, f);
+                }}
+                className="mt-2 text-xs"
+              />
+            </label>
           ))}
-        </div>
-        <div className="mt-4 rounded-xl border-2 border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-          Drag & drop or <span className="text-info underline">browse</span> — PDF, DOCX, PNG up to 10MB.
         </div>
       </Card>
     </div>
@@ -1007,24 +1043,38 @@ function StepMaterials() {
 }
 
 function StepEssayUpload() {
+  const { user, updateProfile } = useUser();
+  const draft = user?.essayDraft ?? "";
+  const wordCount = draft.trim() ? draft.trim().split(/\s+/).length : 0;
+
   return (
     <div className="space-y-6">
       <Card className="bg-secondary/40">
-        <div className="text-xs uppercase tracking-widest text-muted-foreground">Prompt</div>
+        <div className="text-xs uppercase tracking-widest text-muted-foreground">Essay prompt</div>
         <p className="mt-2 font-display italic text-lg">"{essayPrompt}"</p>
+        <p className="mt-2 text-xs text-muted-foreground">
+          You can paste any essay draft you're working on — Scholar-E will coach it without rewriting it.
+        </p>
       </Card>
       <Card>
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span className="font-mono">essay-shpe-foundation-v1.txt</span>
-          <span>487 / 500 words · Draft v1</span>
+          <span className="font-mono">your-essay-draft.txt</span>
+          <span>{wordCount} words · Draft v1</span>
         </div>
-        <pre className="mt-4 whitespace-pre-wrap font-display text-[15px] leading-relaxed text-foreground/90">
-{essayDraft}
-        </pre>
+        <textarea
+          value={draft}
+          onChange={(e) => updateProfile({ essayDraft: e.target.value })}
+          rows={16}
+          placeholder="Paste or write your essay here…"
+          className="mt-3 w-full rounded-lg border border-border bg-background p-4 font-display text-[15px] leading-relaxed"
+        />
       </Card>
       <Card>
-        <button className="w-full rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium hover:opacity-90">
-          Send to AI Coach for evaluation →
+        <button
+          disabled={wordCount < 30}
+          className="w-full rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium hover:opacity-90 disabled:opacity-40"
+        >
+          {wordCount < 30 ? "Write at least a paragraph to send to the coach" : "Send to AI Coach for evaluation →"}
         </button>
       </Card>
     </div>
