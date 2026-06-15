@@ -723,14 +723,18 @@ function GradForm({ value, setBranch, level }: { value: Record<string, unknown>;
 }
 
 function StepDiscovery() {
+  const { user } = useUser();
+  const ug = user?.undergrad;
+  const hs = user?.highSchool;
+  const gr = user?.graduate;
+  const major = ug?.major ?? hs?.intendedMajor ?? gr?.researchArea ?? "—";
   const qs = [
-    { q: "Education level", a: persona.level },
-    { q: "Major category", a: "STEM — Computer Science" },
-    { q: "Location", a: `${persona.location}` },
-    { q: "First-generation?", a: "Yes" },
-    { q: "Financial need?", a: "Pell-eligible" },
-    { q: "Identity-based categories", a: "Hispanic / Latina, Woman in tech" },
-    { q: "Career interests", a: "ML research, healthcare AI" },
+    { q: "Education level", a: user?.educationLevel ? eduLevelLabel(user.educationLevel) : "—" },
+    { q: "Major / focus", a: major },
+    { q: "Location", a: user?.location ?? "—" },
+    { q: "First-generation?", a: user?.firstGen ? "Yes" : "No" },
+    { q: "Financial need?", a: user?.pellEligible ? "Pell-eligible" : "—" },
+    { q: "Career interests", a: user?.careerGoal ?? "—" },
   ];
   return (
     <div className="grid md:grid-cols-2 gap-6">
