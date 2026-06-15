@@ -32,7 +32,28 @@ export const Route = createFileRoute("/journey")({
 });
 
 function Journey() {
+  const { isAuthenticated } = useUser();
+  const navigate = useNavigate();
   const [stepIdx, setStepIdx] = useState(0);
+
+  useEffect(() => {
+    if (!isAuthenticated) navigate({ to: "/auth" });
+  }, [isAuthenticated, navigate]);
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen grid place-items-center p-8 text-center">
+        <div>
+          <h1 className="font-display text-2xl">Sign in to start your journey</h1>
+          <p className="text-sm text-muted-foreground mt-2">Redirecting you to create your account…</p>
+          <Link to="/auth" className="mt-4 inline-flex rounded-full bg-primary text-primary-foreground px-5 py-2 text-sm">
+            Go to sign in →
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   const step = journeySteps[stepIdx];
   const goNext = () => setStepIdx((i) => Math.min(i + 1, journeySteps.length - 1));
   const goPrev = () => setStepIdx((i) => Math.max(i - 1, 0));
