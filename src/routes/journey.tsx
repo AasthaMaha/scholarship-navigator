@@ -96,17 +96,8 @@ function Sidebar({ activeIdx, onSelect }: { activeIdx: number; onSelect: (i: num
         <span className="ml-auto text-[10px] uppercase tracking-widest text-muted-foreground">journey</span>
       </Link>
 
-      <div className="px-6 py-5 border-b border-border">
-        <div className="flex items-center gap-3">
-          <div className="size-10 rounded-full bg-primary text-primary-foreground grid place-items-center font-display">
-            {persona.initials}
-          </div>
-          <div className="min-w-0">
-            <div className="text-sm font-medium truncate">{persona.name}</div>
-            <div className="text-xs text-muted-foreground truncate">{persona.level}</div>
-          </div>
-        </div>
-      </div>
+      <SidebarProfile />
+
 
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
         {groups.map(([group, steps]) => (
