@@ -88,17 +88,17 @@ function Hero() {
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
-            to="/start"
+            to="/journey"
             className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3 text-sm font-medium shadow-sm hover:opacity-90"
           >
-            Start with my profile →
+            Walk through Maya's journey →
           </Link>
-          <Link
-            to="/journey"
+          <a
+            href="#how"
             className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-medium hover:bg-accent"
           >
-            Or walk through Maya's example
-          </Link>
+            See how it works
+          </a>
         </div>
         <div className="mt-10 grid grid-cols-3 gap-6 max-w-md">
           {[
