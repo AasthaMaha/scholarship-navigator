@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import {
   persona,
   journeySteps,
@@ -10,6 +10,12 @@ import {
   essayFeedback,
   submissionChecklist,
 } from "@/lib/persona";
+import {
+  useUser,
+  initials as toInitials,
+  type EducationLevel,
+  type UserProfile,
+} from "@/lib/userStore";
 
 export const Route = createFileRoute("/journey")({
   head: () => ({
