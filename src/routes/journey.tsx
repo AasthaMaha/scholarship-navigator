@@ -495,14 +495,15 @@ function StepProfile() {
 }
 
 function StepDiscovery() {
+  const { profile } = useP();
   const qs = [
-    { q: "Education level", a: persona.level },
-    { q: "Major category", a: "STEM — Computer Science" },
-    { q: "Location", a: `${persona.location}` },
-    { q: "First-generation?", a: "Yes" },
-    { q: "Financial need?", a: "Pell-eligible" },
-    { q: "Identity-based categories", a: "Hispanic / Latina, Woman in tech" },
-    { q: "Career interests", a: "ML research, healthcare AI" },
+    { q: "Education level", a: profile.level },
+    { q: "Major / focus", a: profile.major },
+    { q: "Location", a: profile.location },
+    { q: "First-generation?", a: profile.firstGen ? "Yes" : "No" },
+    { q: "Financial need?", a: profile.pellEligible ? "Pell-eligible" : "Not specified" },
+    { q: "Identity categories", a: profile.identity.length ? profile.identity.join(", ") : "—" },
+    { q: "Career interests", a: profile.careerGoal },
   ];
   return (
     <div className="grid md:grid-cols-2 gap-6">
