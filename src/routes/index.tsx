@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { persona } from "@/lib/persona";
+import { useUser, initials } from "@/lib/userStore";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -26,7 +26,7 @@ function Landing() {
       <Header />
       <main>
         <Hero />
-        <Persona />
+        <StudentDemo />
         <Pillars />
         <CTA />
       </main>
@@ -36,6 +36,7 @@ function Landing() {
 }
 
 function Header() {
+  const { isAuthenticated, user, signOut } = useUser();
   return (
     <header className="border-b border-border/60 backdrop-blur sticky top-0 z-30 bg-background/70">
       <div className="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
@@ -49,14 +50,44 @@ function Header() {
         <nav className="hidden md:flex items-center gap-7 text-sm text-muted-foreground">
           <a href="#how" className="hover:text-foreground">How it works</a>
           <a href="#pillars" className="hover:text-foreground">What we deliver</a>
-          <a href="#persona" className="hover:text-foreground">Meet Maya</a>
+          <a href="#demo" className="hover:text-foreground">Student Demo</a>
         </nav>
-        <Link
-          to="/journey"
-          className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-90"
-        >
-          Start the journey →
-        </Link>
+        <div className="flex items-center gap-2">
+          {isAuthenticated ? (
+            <>
+              <Link
+                to="/journey"
+                className="hidden sm:inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-90"
+              >
+                Continue →
+              </Link>
+              <div className="flex items-center gap-2 rounded-full border border-border bg-card pl-1 pr-3 py-1">
+                <div className="size-7 rounded-full bg-primary text-primary-foreground grid place-items-center text-xs font-display">
+                  {initials(user?.name)}
+                </div>
+                <span className="text-xs">{user?.name}</span>
+                <button onClick={signOut} className="text-[11px] text-muted-foreground hover:text-foreground">
+                  Sign out
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/auth"
+                className="text-sm text-muted-foreground hover:text-foreground px-3 py-2"
+              >
+                Log in
+              </Link>
+              <Link
+                to="/auth"
+                className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-90"
+              >
+                Sign up →
+              </Link>
+            </>
+          )}
+        </div>
       </div>
     </header>
   );
@@ -71,6 +102,7 @@ function LogoMark() {
 }
 
 function Hero() {
+  const { isAuthenticated } = useUser();
   return (
     <section className="mx-auto max-w-7xl px-6 pt-20 pb-16 grid lg:grid-cols-12 gap-12 items-center">
       <div className="lg:col-span-7">
@@ -88,10 +120,10 @@ function Hero() {
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
-            to="/journey"
+            to={isAuthenticated ? "/journey" : "/auth"}
             className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3 text-sm font-medium shadow-sm hover:opacity-90"
           >
-            Walk through Maya's journey →
+            {isAuthenticated ? "Continue your journey →" : "Create your account →"}
           </Link>
           <a
             href="#how"
@@ -127,7 +159,7 @@ function HeroCard() {
       <div className="absolute -inset-4 bg-gradient-to-br from-gold/30 via-transparent to-primary/20 blur-2xl rounded-3xl" />
       <div className="relative rounded-2xl border border-border bg-card/95 backdrop-blur p-5 shadow-xl">
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span className="font-mono">essay-shpe-foundation.txt</span>
+          <span className="font-mono">your-essay-draft.txt</span>
           <span className="inline-flex items-center gap-1.5">
             <span className="size-1.5 rounded-full bg-success" /> Live feedback
           </span>
@@ -137,8 +169,8 @@ function HeroCard() {
           <span className="bg-gold/40 rounded px-0.5 underline decoration-gold decoration-2 underline-offset-4">
             hard sometimes
           </span>
-          . In tenth grade, my school got Chromebooks and I checked one out from the library every single day.
-          I taught myself Python while my mom prepped for the next day's lunch service.
+          . The coach won't rewrite this — it just shows you which sentences need one concrete detail
+          to land the way you want.
         </div>
         <div className="mt-4 rounded-xl border border-gold/40 bg-gold/10 p-3 text-sm">
           <div className="flex items-center justify-between text-xs">
@@ -148,53 +180,52 @@ function HeroCard() {
           <p className="mt-1.5 text-foreground/80">
             Vague closer to a powerful paragraph. Try one concrete detail that <em>shows</em> the difficulty.
           </p>
-          <div className="mt-2 text-xs italic text-muted-foreground">
-            "Some nights I did homework on the restaurant counter, my AP Calc book stained with red salsa."
-          </div>
         </div>
         <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-          <span>SHPE Foundation Scholarship · 487 / 500 words</span>
-          <span>Draft v3</span>
+          <span>Your draft · word count tracked live</span>
+          <span>Draft v1</span>
         </div>
       </div>
     </div>
   );
 }
 
-function Persona() {
+function StudentDemo() {
+  const { isAuthenticated } = useUser();
   return (
-    <section id="persona" className="mx-auto max-w-7xl px-6 py-20">
+    <section id="demo" className="mx-auto max-w-7xl px-6 py-20">
       <div className="rounded-3xl border border-border bg-card p-8 md:p-12 grid md:grid-cols-12 gap-8 items-center">
         <div className="md:col-span-4 flex flex-col items-start gap-4">
-          <div className="size-20 rounded-2xl bg-primary text-primary-foreground grid place-items-center font-display text-3xl">
-            {persona.initials}
-          </div>
-          <div>
-            <div className="text-xs uppercase tracking-widest text-muted-foreground">Walk through as</div>
-            <h2 className="font-display text-3xl mt-1">{persona.name}</h2>
-            <div className="text-sm text-muted-foreground">
-              {persona.level} · {persona.school}
-            </div>
-          </div>
+          <div className="text-xs uppercase tracking-widest text-gold">Student Demo</div>
+          <h2 className="font-display text-3xl md:text-4xl text-balance">
+            Walk through the journey <span className="italic">as yourself</span>.
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            No persona, no dummy data. Create an account, fill in your real profile, paste your real
+            essay — and see exactly what your scholarship workflow will feel like.
+          </p>
         </div>
-        <div className="md:col-span-8">
-          <p className="text-lg text-balance text-foreground/90">{persona.shortBio}</p>
-          <div className="mt-5 flex flex-wrap gap-2">
-            {persona.identity.map((i) => (
-              <span key={i} className="text-xs rounded-full bg-secondary text-secondary-foreground px-3 py-1">
-                {i}
-              </span>
-            ))}
-            <span className="text-xs rounded-full bg-gold/20 text-foreground px-3 py-1">GPA {persona.gpa}</span>
-            <span className="text-xs rounded-full bg-gold/20 text-foreground px-3 py-1">{persona.major}</span>
-            <span className="text-xs rounded-full bg-gold/20 text-foreground px-3 py-1">{persona.location}</span>
+        <div className="md:col-span-8 grid sm:grid-cols-2 gap-3">
+          {[
+            { t: "Create your account", d: "Email + password, or sign in with Google." },
+            { t: "Build your profile", d: "Branching questions based on your education level — only what's relevant to you." },
+            { t: "Add the optional context", d: "Resume, societies, sports, articles, projects — only what you choose." },
+            { t: "Paste your real essay", d: "Get clarity, specificity, and impact coaching — you keep authorship." },
+          ].map((s, i) => (
+            <div key={s.t} className="rounded-2xl border border-border bg-secondary/40 p-5">
+              <div className="font-mono text-xs text-gold">0{i + 1}</div>
+              <div className="font-display text-lg mt-1.5">{s.t}</div>
+              <p className="text-sm text-muted-foreground mt-1">{s.d}</p>
+            </div>
+          ))}
+          <div className="sm:col-span-2 flex items-center justify-end">
+            <Link
+              to={isAuthenticated ? "/journey" : "/auth"}
+              className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-2.5 text-sm font-medium hover:opacity-90"
+            >
+              {isAuthenticated ? "Continue your journey →" : "Start the Student Demo →"}
+            </Link>
           </div>
-          <Link
-            to="/journey"
-            className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-          >
-            Begin Maya's 17-step journey →
-          </Link>
         </div>
       </div>
     </section>
@@ -244,6 +275,7 @@ function Pillars() {
 }
 
 function CTA() {
+  const { isAuthenticated } = useUser();
   return (
     <section id="how" className="mx-auto max-w-7xl px-6 py-20">
       <div className="rounded-3xl bg-primary text-primary-foreground p-10 md:p-14 grid md:grid-cols-12 gap-8 items-center">
@@ -252,16 +284,16 @@ function CTA() {
             See it the way a student sees it.
           </h2>
           <p className="mt-4 text-primary-foreground/80 max-w-2xl">
-            This isn't a demo with placeholder data. Walk through all 17 steps as Maya Rodriguez — a real persona
-            with a real essay, real scholarships, and real coach feedback.
+            This isn't a demo with placeholder data — it's a real walkthrough where you enter your
+            own information and see the coach respond to <em>your</em> draft.
           </p>
         </div>
         <div className="md:col-span-4 md:text-right">
           <Link
-            to="/journey"
+            to={isAuthenticated ? "/journey" : "/auth"}
             className="inline-flex items-center gap-2 rounded-full bg-gold text-gold-foreground px-6 py-3 text-sm font-semibold hover:opacity-90"
           >
-            Enter the journey →
+            {isAuthenticated ? "Enter the journey →" : "Create account →"}
           </Link>
         </div>
       </div>
