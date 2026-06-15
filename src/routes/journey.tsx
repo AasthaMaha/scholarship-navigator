@@ -380,68 +380,345 @@ function StepOnboarding() {
   );
 }
 
-function StepProfile() {
+function SidebarUser() {
+  const { user } = useUser();
+  const subtitle =
+    user?.educationLevel
+      ? eduLevelLabel(user.educationLevel)
+      : "Complete your profile →";
   return (
-    <div className="grid md:grid-cols-3 gap-6">
-      <Card className="md:col-span-1">
-        <div className="size-16 rounded-2xl bg-primary text-primary-foreground grid place-items-center font-display text-2xl">
-          {persona.initials}
-        </div>
-        <div className="mt-4 font-display text-xl">{persona.name}</div>
-        <div className="text-sm text-muted-foreground">{persona.pronouns}</div>
-        <div className="mt-4 space-y-1.5">
-          <Pill tone="gold">First-generation</Pill>{" "}
-          <Pill tone="gold">Pell-eligible</Pill>{" "}
-          <Pill>Texas resident</Pill>
-        </div>
-        <div className="mt-5 text-sm text-muted-foreground">
-          <span className="text-foreground font-medium">87%</span> complete — strong applications need a complete profile.
-        </div>
-        <div className="mt-2 h-1.5 rounded-full bg-secondary overflow-hidden">
-          <div className="h-full bg-gold" style={{ width: "87%" }} />
+    <div className="flex items-center gap-3">
+      <div className="size-10 rounded-full bg-primary text-primary-foreground grid place-items-center font-display">
+        {toInitials(user?.name)}
+      </div>
+      <div className="min-w-0">
+        <div className="text-sm font-medium truncate">{user?.name || "Your account"}</div>
+        <div className="text-xs text-muted-foreground truncate">{subtitle}</div>
+      </div>
+    </div>
+  );
+}
+
+function eduLevelLabel(l: EducationLevel) {
+  return {
+    high_school: "High school student",
+    undergrad: "Undergraduate",
+    grad: "Graduate student",
+    phd: "PhD student",
+  }[l];
+}
+
+/* ------- Profile form (branching by education level) ------- */
+
+function StepProfile() {
+  const { user, updateProfile } = useUser();
+  const level = user?.educationLevel;
+
+  function set<K extends keyof UserProfile>(key: K, value: UserProfile[K]) {
+    updateProfile({ [key]: value } as Partial<UserProfile>);
+  }
+  function setBranch<T extends "highSchool" | "undergrad" | "graduate">(
+    branch: T,
+    patch: Record<string, unknown>,
+  ) {
+    updateProfile({
+      [branch]: { ...((user?.[branch] as object | undefined) ?? {}), ...patch },
+    } as Partial<UserProfile>);
+  }
+  function setOptional(patch: Record<string, unknown>) {
+    updateProfile({ optional: { ...(user?.optional ?? {}), ...patch } });
+  }
+  function setPrompts(patch: Record<string, unknown>) {
+    updateProfile({ prompts: { ...(user?.prompts ?? {}), ...patch } });
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <div className="flex items-center gap-3">
+          <div className="size-12 rounded-2xl bg-primary text-primary-foreground grid place-items-center font-display text-xl">
+            {toInitials(user?.name)}
+          </div>
+          <div>
+            <div className="font-display text-xl">{user?.name}</div>
+            <div className="text-sm text-muted-foreground">{user?.email}</div>
+          </div>
         </div>
       </Card>
 
-      <Card className="md:col-span-2">
-        <div className="text-xs uppercase tracking-widest text-muted-foreground">Academic profile</div>
-        <div className="mt-3">
-          <FieldRow label="School" value={persona.school} />
-          <FieldRow label="Education level" value={persona.level} />
-          <FieldRow label="Major / Minor" value={`${persona.major} / ${persona.minor}`} />
-          <FieldRow label="GPA" value={persona.gpa} />
-          <FieldRow label="Location" value={`${persona.location} (from ${persona.hometown})`} />
-          <FieldRow label="Email" value={persona.email} />
+      <Card>
+        <SectionLabel>About you</SectionLabel>
+        <div className="grid sm:grid-cols-2 gap-3 mt-3">
+          <Input label="Pronouns" value={user?.pronouns ?? ""} onChange={(v) => set("pronouns", v)} placeholder="she/her, he/him, they/them…" />
+          <Input label="Location" value={user?.location ?? ""} onChange={(v) => set("location", v)} placeholder="City, State" />
+          <Input
+            label="Career goal (1-2 sentences)"
+            value={user?.careerGoal ?? ""}
+            onChange={(v) => set("careerGoal", v)}
+            placeholder="What do you want to do after school?"
+            className="sm:col-span-2"
+          />
         </div>
-
-        <div className="mt-6 text-xs uppercase tracking-widest text-muted-foreground">Career goal</div>
-        <p className="mt-2 text-sm text-foreground/90">{persona.careerGoal}</p>
-
-        <div className="mt-6 text-xs uppercase tracking-widest text-muted-foreground">Experiences</div>
-        <div className="mt-3 grid sm:grid-cols-2 gap-3">
-          {[
-            ["Research", persona.experiences.research],
-            ["Leadership", persona.experiences.leadership],
-            ["Work", persona.experiences.work],
-            ["Volunteer", persona.experiences.volunteer],
-          ].map(([label, arr]) => (
-            <div key={label as string} className="rounded-xl bg-secondary/40 p-3">
-              <div className="text-xs font-medium text-muted-foreground">{label as string}</div>
-              {(arr as { title: string; when: string }[]).map((e) => (
-                <div key={e.title} className="mt-2 text-sm">
-                  <div className="font-medium leading-tight">{e.title}</div>
-                  <div className="text-xs text-muted-foreground">{e.when}</div>
-                </div>
-              ))}
-            </div>
-          ))}
+        <div className="mt-4 flex flex-wrap gap-4">
+          <Check label="First-generation college student" checked={!!user?.firstGen} onChange={(v) => set("firstGen", v)} />
+          <Check label="Pell-grant eligible" checked={!!user?.pellEligible} onChange={(v) => set("pellEligible", v)} />
         </div>
+      </Card>
 
-        <div className="mt-6 text-xs uppercase tracking-widest text-muted-foreground">Awards</div>
-        <ul className="mt-2 text-sm space-y-1 text-foreground/90 list-disc pl-5">
-          {persona.experiences.awards.map((a) => <li key={a}>{a}</li>)}
-        </ul>
+      <Card>
+        <SectionLabel>Education level</SectionLabel>
+        <p className="text-xs text-muted-foreground mt-1">
+          We use this to ask only the questions that apply to you.
+        </p>
+        <select
+          value={level ?? ""}
+          onChange={(e) => set("educationLevel", (e.target.value || undefined) as EducationLevel | undefined)}
+          className="mt-3 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm"
+        >
+          <option value="">Select your education level…</option>
+          <option value="high_school">High school</option>
+          <option value="undergrad">Undergraduate</option>
+          <option value="grad">Graduate student</option>
+          <option value="phd">PhD student</option>
+        </select>
+      </Card>
+
+      {level === "high_school" && <HighSchoolForm setBranch={setBranch} value={user?.highSchool ?? {}} />}
+      {level === "undergrad" && <UndergradForm setBranch={setBranch} value={user?.undergrad ?? {}} />}
+      {(level === "grad" || level === "phd") && <GradForm setBranch={setBranch} value={user?.graduate ?? {}} level={level} />}
+
+      <Card>
+        <SectionLabel>Optional context</SectionLabel>
+        <p className="text-xs text-muted-foreground mt-1">
+          All optional — add whatever helps scholarships see who you are.
+        </p>
+        <div className="mt-4 space-y-3">
+          <FileField
+            label="Resume (optional)"
+            fileName={user?.optional?.resumeFileName}
+            onFile={(name) => setOptional({ resumeFileName: name })}
+          />
+          <Textarea label="Society / club involvement" value={user?.optional?.societyInvolvement ?? ""} onChange={(v) => setOptional({ societyInvolvement: v })} placeholder="Clubs, organizations, leadership roles…" />
+          <Textarea label="Sports" value={user?.optional?.sports ?? ""} onChange={(v) => setOptional({ sports: v })} placeholder="Teams, varsity/club, captaincy…" />
+          <Textarea label="Articles published" value={user?.optional?.articlesPublished ?? ""} onChange={(v) => setOptional({ articlesPublished: v })} placeholder="Titles, outlets, links…" />
+          <Textarea label="Projects" value={user?.optional?.projects ?? ""} onChange={(v) => setOptional({ projects: v })} placeholder="Personal, school, or research projects…" />
+        </div>
+      </Card>
+
+      <Card>
+        <SectionLabel>Story prompts (optional)</SectionLabel>
+        <p className="text-xs text-muted-foreground mt-1">
+          Short reflections you can reuse across scholarship essays.
+        </p>
+        <div className="mt-4 space-y-3">
+          <Textarea label="Name a time you overcame a challenge." value={user?.prompts?.challenge ?? ""} onChange={(v) => setPrompts({ challenge: v })} />
+          <Textarea label="Name a time you had to be a leader." value={user?.prompts?.leadership ?? ""} onChange={(v) => setPrompts({ leadership: v })} />
+          <Textarea label="Name a time you worked with a team." value={user?.prompts?.teamwork ?? ""} onChange={(v) => setPrompts({ teamwork: v })} />
+        </div>
       </Card>
     </div>
+  );
+}
+
+/* form atoms */
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return <div className="text-xs uppercase tracking-widest text-muted-foreground">{children}</div>;
+}
+function Input({
+  label, value, onChange, placeholder, className = "", type = "text",
+}: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; className?: string; type?: string }) {
+  return (
+    <label className={`block ${className}`}>
+      <span className="text-xs font-medium text-muted-foreground">{label}</span>
+      <input
+        type={type}
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+        className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+      />
+    </label>
+  );
+}
+function Textarea({
+  label, value, onChange, placeholder, rows = 3,
+}: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; rows?: number }) {
+  return (
+    <label className="block">
+      <span className="text-xs font-medium text-muted-foreground">{label}</span>
+      <textarea
+        value={value}
+        rows={rows}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+        className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm leading-relaxed"
+      />
+    </label>
+  );
+}
+function Select({
+  label, value, onChange, options, className = "",
+}: { label: string; value: string; onChange: (v: string) => void; options: string[]; className?: string }) {
+  return (
+    <label className={`block ${className}`}>
+      <span className="text-xs font-medium text-muted-foreground">{label}</span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+      >
+        <option value="">Select…</option>
+        {options.map((o) => <option key={o} value={o}>{o}</option>)}
+      </select>
+    </label>
+  );
+}
+function Check({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label className="inline-flex items-center gap-2 text-sm">
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="size-4 accent-[oklch(0.32_0.09_270)]" />
+      <span>{label}</span>
+    </label>
+  );
+}
+function FileField({ label, fileName, onFile }: { label: string; fileName?: string; onFile: (name: string) => void }) {
+  return (
+    <div>
+      <span className="text-xs font-medium text-muted-foreground">{label}</span>
+      <div className="mt-1 flex items-center gap-3 rounded-lg border-2 border-dashed border-border p-4">
+        <input
+          type="file"
+          accept=".pdf,.doc,.docx"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) onFile(f.name);
+          }}
+          className="text-sm"
+        />
+        {fileName && <span className="text-xs text-success">✓ {fileName}</span>}
+      </div>
+    </div>
+  );
+}
+function CheckGroup({ label, options, value, onChange }: { label: string; options: string[]; value: string[]; onChange: (v: string[]) => void }) {
+  function toggle(o: string) {
+    onChange(value.includes(o) ? value.filter((x) => x !== o) : [...value, o]);
+  }
+  return (
+    <div>
+      <span className="text-xs font-medium text-muted-foreground">{label}</span>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {options.map((o) => {
+          const on = value.includes(o);
+          return (
+            <button
+              key={o}
+              type="button"
+              onClick={() => toggle(o)}
+              className={`rounded-full px-3 py-1.5 text-xs border transition-colors ${
+                on ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border hover:bg-accent"
+              }`}
+            >
+              {o}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function HighSchoolForm({ value, setBranch }: { value: Record<string, unknown>; setBranch: (b: "highSchool", p: Record<string, unknown>) => void }) {
+  const v = value as Record<string, string | string[] | undefined>;
+  const needsOptions = ["Finding scholarships", "Essay review", "College list", "FAFSA", "Recommendation strategy", "Deadlines"];
+  return (
+    <Card>
+      <SectionLabel>High school details</SectionLabel>
+      <div className="grid sm:grid-cols-2 gap-3 mt-3">
+        <Select label="Current grade" value={(v.currentGrade as string) ?? ""} onChange={(x) => setBranch("highSchool", { currentGrade: x })} options={["9th", "10th", "11th", "12th"]} />
+        <Select label="Graduation month" value={(v.gradMonth as string) ?? ""} onChange={(x) => setBranch("highSchool", { gradMonth: x })} options={["January","February","March","April","May","June","July","August","September","October","November","December"]} />
+        <Input label="Graduation year" value={(v.gradYear as string) ?? ""} onChange={(x) => setBranch("highSchool", { gradYear: x })} placeholder="2027" />
+        <Input label="High school GPA" value={(v.gpa as string) ?? ""} onChange={(x) => setBranch("highSchool", { gpa: x })} placeholder="3.85" />
+        <Select label="GPA weighting" value={(v.gpaWeighting as string) ?? ""} onChange={(x) => setBranch("highSchool", { gpaWeighting: x })} options={["Weighted", "Unweighted"]} />
+        <Select label="SAT / ACT status" value={(v.testStatus as string) ?? ""} onChange={(x) => setBranch("highSchool", { testStatus: x })} options={["Taken", "Planning to take", "Test-optional"]} />
+        <Input label="Intended college start year (optional)" value={(v.intendedStartYear as string) ?? ""} onChange={(x) => setBranch("highSchool", { intendedStartYear: x })} placeholder="2027" />
+        <Input label="Intended college major (optional)" value={(v.intendedMajor as string) ?? ""} onChange={(x) => setBranch("highSchool", { intendedMajor: x })} placeholder="Biology, CS, Undecided…" />
+      </div>
+      <div className="mt-3 space-y-3">
+        <Textarea label="AP / IB / dual-credit courses" value={(v.apIb as string) ?? ""} onChange={(x) => setBranch("highSchool", { apIb: x })} />
+        <Select label="Parent / guardian education level" value={(v.parentEducation as string) ?? ""} onChange={(x) => setBranch("highSchool", { parentEducation: x })} options={["Did not finish high school", "High school", "Some college", "Associate's", "Bachelor's", "Graduate degree"]} />
+        <Textarea label="Extracurriculars" value={(v.extracurricular as string) ?? ""} onChange={(x) => setBranch("highSchool", { extracurricular: x })} />
+        <Textarea label="Activities, work, family duties, athletics" value={(v.activities as string) ?? ""} onChange={(x) => setBranch("highSchool", { activities: x })} />
+        <Textarea label="Volunteer service" value={(v.volunteer as string) ?? ""} onChange={(x) => setBranch("highSchool", { volunteer: x })} />
+        <CheckGroup
+          label="I need help with"
+          options={needsOptions}
+          value={(v.needsHelpWith as string[]) ?? []}
+          onChange={(x) => setBranch("highSchool", { needsHelpWith: x })}
+        />
+      </div>
+    </Card>
+  );
+}
+
+function UndergradForm({ value, setBranch }: { value: Record<string, unknown>; setBranch: (b: "undergrad", p: Record<string, unknown>) => void }) {
+  const v = value as Record<string, string | string[] | undefined>;
+  const needsOptions = ["Departmental scholarships", "Transfer scholarships", "Merit aid", "Need-based aid", "Emergency grants", "Internship funding", "Study abroad funding"];
+  return (
+    <Card>
+      <SectionLabel>Undergraduate details</SectionLabel>
+      <div className="grid sm:grid-cols-2 gap-3 mt-3">
+        <Input label="Institution name" value={(v.institution as string) ?? ""} onChange={(x) => setBranch("undergrad", { institution: x })} placeholder="e.g. Rice University" />
+        <Select label="College type" value={(v.collegeType as string) ?? ""} onChange={(x) => setBranch("undergrad", { collegeType: x })} options={["2-year", "4-year", "Transfer student"]} />
+        <Select label="Current year" value={(v.currentYear as string) ?? ""} onChange={(x) => setBranch("undergrad", { currentYear: x })} options={["Freshman", "Sophomore", "Junior", "Senior", "Super senior"]} />
+        <Select label="Enrollment status" value={(v.enrollment as string) ?? ""} onChange={(x) => setBranch("undergrad", { enrollment: x })} options={["Full-time", "Part-time"]} />
+        <Input label="Major" value={(v.major as string) ?? ""} onChange={(x) => setBranch("undergrad", { major: x })} />
+        <Input label="Minor" value={(v.minor as string) ?? ""} onChange={(x) => setBranch("undergrad", { minor: x })} />
+        <Input label="College GPA" value={(v.gpa as string) ?? ""} onChange={(x) => setBranch("undergrad", { gpa: x })} placeholder="3.85" />
+        <Input label="Credits completed" value={(v.creditsCompleted as string) ?? ""} onChange={(x) => setBranch("undergrad", { creditsCompleted: x })} placeholder="48" />
+      </div>
+      <div className="mt-3 space-y-3">
+        <Textarea label="Transfer history (if any)" value={(v.transferHistory as string) ?? ""} onChange={(x) => setBranch("undergrad", { transferHistory: x })} />
+        <Textarea label="Internships / research / lab experience" value={(v.experience as string) ?? ""} onChange={(x) => setBranch("undergrad", { experience: x })} />
+        <Textarea label="Student organizations & leadership" value={(v.orgsLeadership as string) ?? ""} onChange={(x) => setBranch("undergrad", { orgsLeadership: x })} />
+        <Textarea label="Scholarship history" value={(v.scholarshipHistory as string) ?? ""} onChange={(x) => setBranch("undergrad", { scholarshipHistory: x })} />
+        <CheckGroup
+          label="I need help with"
+          options={needsOptions}
+          value={(v.needsHelpWith as string[]) ?? []}
+          onChange={(x) => setBranch("undergrad", { needsHelpWith: x })}
+        />
+      </div>
+    </Card>
+  );
+}
+
+function GradForm({ value, setBranch, level }: { value: Record<string, unknown>; setBranch: (b: "graduate", p: Record<string, unknown>) => void; level: EducationLevel }) {
+  const v = value as Record<string, string | string[] | undefined>;
+  const needsOptions = ["Fellowships", "Assistantships", "Conference grants", "Dissertation funding", "Research grants", "Professional association awards"];
+  return (
+    <Card>
+      <SectionLabel>{level === "phd" ? "PhD" : "Graduate"} details</SectionLabel>
+      <div className="grid sm:grid-cols-2 gap-3 mt-3">
+        <Select label="Graduate level" value={(v.graduateLevel as string) ?? (level === "phd" ? "PhD" : "")} onChange={(x) => setBranch("graduate", { graduateLevel: x })} options={["Master's", "PhD", "MBA", "JD", "MD", "Other"]} />
+        <Input label="Program name" value={(v.program as string) ?? ""} onChange={(x) => setBranch("graduate", { program: x })} />
+        <Input label="Institution" value={(v.institution as string) ?? ""} onChange={(x) => setBranch("graduate", { institution: x })} />
+        <Input label="Department" value={(v.department as string) ?? ""} onChange={(x) => setBranch("graduate", { department: x })} />
+        <Input label="Research area / concentration" value={(v.researchArea as string) ?? ""} onChange={(x) => setBranch("graduate", { researchArea: x })} className="sm:col-span-2" />
+        <Select label="Assistantship / fellowship status" value={(v.assistantshipStatus as string) ?? ""} onChange={(x) => setBranch("graduate", { assistantshipStatus: x })} options={["TA", "RA", "Fellowship", "Self-funded", "Other"]} />
+        <Input label="Professional licenses / exams (if relevant)" value={(v.licenses as string) ?? ""} onChange={(x) => setBranch("graduate", { licenses: x })} />
+      </div>
+      <div className="mt-3 space-y-3">
+        <Textarea label="Research output (publications, presentations, posters, thesis/dissertation stage)" value={(v.researchOutput as string) ?? ""} onChange={(x) => setBranch("graduate", { researchOutput: x })} />
+        <Textarea label="Conference travel or research expense needs" value={(v.travelNeeds as string) ?? ""} onChange={(x) => setBranch("graduate", { travelNeeds: x })} />
+        <CheckGroup
+          label="I need help with"
+          options={needsOptions}
+          value={(v.needsHelpWith as string[]) ?? []}
+          onChange={(x) => setBranch("graduate", { needsHelpWith: x })}
+        />
+      </div>
+    </Card>
   );
 }
 
