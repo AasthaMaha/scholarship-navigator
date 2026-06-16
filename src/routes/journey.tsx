@@ -1253,31 +1253,42 @@ function StepEssayUpload() {
   async function handlePdf(file: File) {
     setPdfStatus(`Extracting text from ${file.name}…`);
     try {
-      // Lazy load pdfjs from CDN at runtime to avoid bundling weight
-      const pdfjsLib = (window as unknown as { pdfjsLib?: unknown }).pdfjsLib as
-        | undefined
-        | typeof import("pdfjs-dist");
-      let pdfjs: typeof import("pdfjs-dist");
-      if (pdfjsLib) {
-        pdfjs = pdfjsLib as typeof import("pdfjs-dist");
-      } else {
-        // Fallback: just read as text if no PDF parser available
-        const reader = new FileReader();
-        reader.onload = () => {
-          const text = String(reader.result ?? "");
-          updateProfile({ essayDraft: text });
-          setPdfStatus(`Loaded ${file.name} (raw).`);
+      const w = window as unknown as {
+        pdfjsLib?: {
+          GlobalWorkerOptions?: { workerSrc?: string };
+          getDocument: (opts: { data: ArrayBuffer }) => { promise: Promise<PdfDoc> };
         };
-        reader.readAsText(file);
-        return;
+      };
+      type PdfDoc = {
+        numPages: number;
+        getPage: (n: number) => Promise<{
+          getTextContent: () => Promise<{ items: { str?: string }[] }>;
+        }>;
+      };
+
+      if (!w.pdfjsLib) {
+        await new Promise<void>((resolve, reject) => {
+          const s = document.createElement("script");
+          s.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.mjs";
+          s.type = "module";
+          s.onload = () => resolve();
+          s.onerror = () => reject(new Error("Failed to load PDF parser"));
+          document.head.appendChild(s);
+        });
       }
+      if (!w.pdfjsLib) throw new Error("PDF parser unavailable");
+      if (w.pdfjsLib.GlobalWorkerOptions) {
+        w.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.mjs";
+      }
+
       const buf = await file.arrayBuffer();
-      const pdf = await pdfjs.getDocument({ data: buf }).promise;
+      const pdf: PdfDoc = await w.pdfjsLib.getDocument({ data: buf }).promise;
       let full = "";
       for (let p = 1; p <= pdf.numPages; p++) {
         const page = await pdf.getPage(p);
         const tc = await page.getTextContent();
-        full += tc.items.map((i: { str?: string }) => i.str ?? "").join(" ") + "\n\n";
+        full += tc.items.map((i) => i.str ?? "").join(" ") + "\n\n";
       }
       updateProfile({ essayDraft: full.trim() });
       setPdfStatus(`Imported ${pdf.numPages} pages from ${file.name}.`);
@@ -1285,6 +1296,7 @@ function StepEssayUpload() {
       setPdfStatus(`Could not parse PDF: ${(e as Error).message}`);
     }
   }
+
 
   function saveAsDraft() {
     const prev = user?.drafts ?? [];
