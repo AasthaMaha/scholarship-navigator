@@ -280,11 +280,10 @@ function CTA() {
       <div className="rounded-3xl bg-primary text-primary-foreground p-10 md:p-14 grid md:grid-cols-12 gap-8 items-center">
         <div className="md:col-span-8">
           <h2 className="font-display text-4xl md:text-5xl text-balance">
-            See it the way a student sees it.
+            Start now.
           </h2>
           <p className="mt-4 text-primary-foreground/80 max-w-2xl">
-            This isn't a demo with placeholder data — it's a real walkthrough where you enter your
-            own information and see the coach respond to <em>your</em> draft.
+            Create your account, build your profile, and walk through the full scholarship workflow.
           </p>
         </div>
         <div className="md:col-span-4 md:text-right">
