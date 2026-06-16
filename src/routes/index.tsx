@@ -201,16 +201,15 @@ function StudentDemo() {
             Walk through the journey <span className="italic">as yourself</span>.
           </h2>
           <p className="text-sm text-muted-foreground">
-            No persona, no dummy data. Create an account, fill in your real profile, paste your real
-            essay — and see exactly what your scholarship workflow will feel like.
+            Create an account, fill in your real profile, paste your real essay — and see exactly
+            what your scholarship workflow will feel like.
           </p>
         </div>
-        <div className="md:col-span-8 grid sm:grid-cols-2 gap-3">
+        <div className="md:col-span-8 grid sm:grid-cols-3 gap-3">
           {[
             { t: "Create your account", d: "Email + password, or sign in with Google." },
-            { t: "Build your profile", d: "Branching questions based on your education level — only what's relevant to you." },
-            { t: "Add the optional context", d: "Resume, societies, sports, articles, projects — only what you choose." },
-            { t: "Paste your real essay", d: "Get clarity, specificity, and impact coaching — you keep authorship." },
+            { t: "Build your profile", d: "Branching questions based on your education level — plus optional context like resume, societies, sports, articles, and projects." },
+            { t: "Personalized Coaching", d: "Get clarity, specificity, and impact coaching on your real essay — you keep authorship." },
           ].map((s, i) => (
             <div key={s.t} className="rounded-2xl border border-border bg-secondary/40 p-5">
               <div className="font-mono text-xs text-gold">0{i + 1}</div>
@@ -218,7 +217,7 @@ function StudentDemo() {
               <p className="text-sm text-muted-foreground mt-1">{s.d}</p>
             </div>
           ))}
-          <div className="sm:col-span-2 flex items-center justify-end">
+          <div className="sm:col-span-3 flex items-center justify-end">
             <Link
               to={isAuthenticated ? "/journey" : "/auth"}
               className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-2.5 text-sm font-medium hover:opacity-90"
@@ -281,11 +280,10 @@ function CTA() {
       <div className="rounded-3xl bg-primary text-primary-foreground p-10 md:p-14 grid md:grid-cols-12 gap-8 items-center">
         <div className="md:col-span-8">
           <h2 className="font-display text-4xl md:text-5xl text-balance">
-            See it the way a student sees it.
+            Start now.
           </h2>
           <p className="mt-4 text-primary-foreground/80 max-w-2xl">
-            This isn't a demo with placeholder data — it's a real walkthrough where you enter your
-            own information and see the coach respond to <em>your</em> draft.
+            Create your account, build your profile, and walk through the full scholarship workflow.
           </p>
         </div>
         <div className="md:col-span-4 md:text-right">

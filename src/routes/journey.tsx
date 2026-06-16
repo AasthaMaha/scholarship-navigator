@@ -14,16 +14,23 @@ import {
   initials as toInitials,
   type EducationLevel,
   type UserProfile,
+  type EssayDraft,
 } from "@/lib/userStore";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export const Route = createFileRoute("/journey")({
   head: () => ({
     meta: [
-      { title: "Maya's Journey · Scholar-E" },
+      { title: "Your Journey · Scholar-E" },
       {
         name: "description",
         content:
-          "A 17-step walkthrough of Scholar-E as Maya Rodriguez, a first-gen CS sophomore at Rice applying for scholarships.",
+          "Walk through Scholar-E as yourself — from discovery to submission, with AI coaching on your own essay.",
       },
     ],
   }),
@@ -58,21 +65,23 @@ function Journey() {
   const goPrev = () => setStepIdx((i) => Math.max(i - 1, 0));
 
   return (
-    <div className="min-h-screen flex">
-      <Sidebar activeIdx={stepIdx} onSelect={setStepIdx} />
-      <div className="flex-1 flex flex-col min-w-0">
-        <TopBar step={step} onNext={goNext} onPrev={goPrev} stepIdx={stepIdx} />
-        <main className="flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-5xl px-6 md:px-10 py-10">
-            <StepHeader step={step} />
-            <div className="mt-8">
-              <StepBody slug={step.slug} />
+    <TooltipProvider delayDuration={150}>
+      <div className="min-h-screen flex">
+        <Sidebar activeIdx={stepIdx} onSelect={setStepIdx} />
+        <div className="flex-1 flex flex-col min-w-0">
+          <TopBar step={step} onNext={goNext} onPrev={goPrev} stepIdx={stepIdx} />
+          <main className="flex-1 overflow-y-auto">
+            <div className="mx-auto max-w-5xl px-6 md:px-10 py-10">
+              <StepHeader step={step} />
+              <div className="mt-8">
+                <StepBody slug={step.slug} goNext={goNext} />
+              </div>
+              <Nav stepIdx={stepIdx} onNext={goNext} onPrev={goPrev} />
             </div>
-            <Nav stepIdx={stepIdx} onNext={goNext} onPrev={goPrev} />
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }
 
@@ -107,7 +116,7 @@ function Sidebar({ activeIdx, onSelect }: { activeIdx: number; onSelect: (i: num
             <div className="px-3 text-[10px] uppercase tracking-widest text-muted-foreground mb-2">{group}</div>
             <div className="space-y-0.5">
               {steps.map((s) => {
-                const idx = s.id - 1;
+                const idx = journeySteps.findIndex((x) => x.id === s.id);
                 const isActive = idx === activeIdx;
                 const isDone = idx < activeIdx;
                 return (
@@ -236,21 +245,16 @@ function Nav({ stepIdx, onNext, onPrev }: { stepIdx: number; onNext: () => void;
   );
 }
 
-/* --------------------------- Step body dispatcher --------------------------- */
-
-function StepBody({ slug }: { slug: string }) {
+function StepBody({ slug, goNext }: { slug: string; goNext: () => void }) {
   switch (slug) {
     case "land": return <StepLand />;
-    case "onboarding": return <StepOnboarding />;
     case "profile": return <StepProfile />;
     case "discovery": return <StepDiscovery />;
-    case "opportunities": return <StepOpportunities />;
+    case "opportunities": return <StepOpportunities onAnalyze={goNext} />;
     case "import": return <StepImport />;
-    case "requirements": return <StepRequirements />;
-    case "fit": return <StepFit />;
-    case "materials": return <StepMaterials />;
+    case "requirements": return <StepRequirementsAndFit />;
+    case "essay-outline": return <StepEssayOutline />;
     case "essay-upload": return <StepEssayUpload />;
-    case "ai-evaluate": return <StepAIEvaluate />;
     case "scores": return <StepScores />;
     case "highlights": return <StepHighlights />;
     case "revise": return <StepRevise />;
@@ -260,8 +264,6 @@ function StepBody({ slug }: { slug: string }) {
     default: return null;
   }
 }
-
-/* ----------------------------- Reusable atoms ----------------------------- */
 
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return <div className={`rounded-2xl border border-border bg-card p-6 ${className}`}>{children}</div>;
@@ -288,9 +290,23 @@ function FieldRow({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-/* --------------------------------- Steps --------------------------------- */
+/* ---------------- Step 1: Land + Onboarding combined ---------------- */
 
 function StepLand() {
+  const slides = [
+    {
+      t: "What is a scholarship?",
+      d: "Free money for school — never paid back. Awarded by foundations, employers, governments, and schools.",
+    },
+    {
+      t: "Three types you should know",
+      d: "Merit (grades, talent), need-based (income), and identity / community (heritage, major, location, status).",
+    },
+    {
+      t: "How Scholar-E helps",
+      d: "We don't write your essay. We help you find scholarships, understand requirements, and improve your drafts.",
+    },
+  ];
   return (
     <div className="space-y-6">
       <Card className="!p-0 overflow-hidden">
@@ -312,7 +328,7 @@ function StepLand() {
           </div>
         </div>
         <div className="p-6 grid sm:grid-cols-3 gap-4 text-sm">
-          {["Discover", "Analyze", "Coach", "Track"].slice(0, 3).map((t, i) => (
+          {["Discover", "Analyze", "Coach"].map((t, i) => (
             <div key={t} className="rounded-xl bg-secondary/60 p-4">
               <div className="font-mono text-xs text-gold">0{i + 1}</div>
               <div className="font-display text-lg mt-1">{t}</div>
@@ -320,41 +336,9 @@ function StepLand() {
           ))}
         </div>
       </Card>
-      <Card>
-        <div className="flex items-start gap-3">
-          <div className="size-9 rounded-full bg-gold text-gold-foreground grid place-items-center">👋</div>
-          <div>
-            <div className="font-medium">Maya lands on the homepage from a SHPE Slack link.</div>
-            <p className="text-sm text-muted-foreground mt-1">
-              She's heard about scholarships but doesn't know where to start. The hero copy makes one promise
-              clear: <em>she'll still be the author</em>.
-            </p>
-          </div>
-        </div>
-      </Card>
-    </div>
-  );
-}
 
-function StepOnboarding() {
-  const slides = [
-    {
-      t: "What is a scholarship?",
-      d: "Free money for school — never paid back. Awarded by foundations, employers, governments, and schools.",
-    },
-    {
-      t: "Three types you should know",
-      d: "Merit (grades, talent), need-based (income), and identity / community (heritage, major, location, status).",
-    },
-    {
-      t: "How Scholar-E helps",
-      d: "We don't write your essay. We help you find scholarships, understand requirements, and improve your drafts.",
-    },
-  ];
-  return (
-    <div className="space-y-6">
       <Card>
-        <div className="text-xs uppercase tracking-widest text-muted-foreground">Onboarding · 3 of 3 read</div>
+        <div className="text-xs uppercase tracking-widest text-muted-foreground">Quick onboarding — 3 things to know</div>
         <div className="mt-3 grid md:grid-cols-3 gap-4">
           {slides.map((s, i) => (
             <div key={s.t} className="rounded-xl border border-border bg-secondary/40 p-5">
@@ -364,15 +348,15 @@ function StepOnboarding() {
             </div>
           ))}
         </div>
-      </Card>
-      <Card>
-        <div className="flex items-center gap-3">
-          <input type="checkbox" defaultChecked className="size-4 accent-[oklch(0.32_0.09_270)]" />
-          <span className="text-sm">I understand Scholar-E is a coach, not a ghostwriter.</span>
-        </div>
-        <div className="flex items-center gap-3 mt-2">
-          <input type="checkbox" defaultChecked className="size-4 accent-[oklch(0.32_0.09_270)]" />
-          <span className="text-sm">I'll keep my essays in my own voice and authorship.</span>
+        <div className="mt-5 space-y-2">
+          <label className="flex items-center gap-3">
+            <input type="checkbox" defaultChecked className="size-4 accent-[oklch(0.32_0.09_270)]" />
+            <span className="text-sm">I understand Scholar-E is a coach, not a ghostwriter.</span>
+          </label>
+          <label className="flex items-center gap-3">
+            <input type="checkbox" defaultChecked className="size-4 accent-[oklch(0.32_0.09_270)]" />
+            <span className="text-sm">I'll keep my essays in my own voice and authorship.</span>
+          </label>
         </div>
       </Card>
     </div>
@@ -407,11 +391,74 @@ function eduLevelLabel(l: EducationLevel) {
   }[l];
 }
 
-/* ------- Profile form (branching by education level) ------- */
+/* -------------------- Glossary tooltip + ext checkbox groups -------------------- */
+
+const GLOSSARY: Record<string, string> = {
+  "Pell Grant eligible": "A U.S. federal grant for undergraduates with significant financial need — based on your FAFSA. Doesn't have to be repaid.",
+  "FAFSA completed": "Free Application for Federal Student Aid — determines federal aid, work-study, and many state/institutional awards.",
+  "First-generation college student": "Typically: neither parent/guardian completed a 4-year college degree.",
+  "Low-income background": "Household income below standard federal/state thresholds; often Pell-eligible.",
+  "Student with disability": "A documented physical, learning, or mental-health disability eligible for accommodations.",
+  "Foster care experience": "You spent time in the U.S. foster-care system (often qualifies for dedicated awards).",
+  "Student with dependents": "You have children or other dependents you financially support.",
+  "U.S. citizen": "Born in the U.S. or naturalized — broadest eligibility for federal/state aid.",
+  "Permanent resident": "Holds a Green Card (Lawful Permanent Resident) — eligible for most federal aid.",
+  "International student": "Non-U.S. citizen on a student visa — eligibility narrows to private/institutional awards.",
+  "DACA / undocumented student": "Deferred Action for Childhood Arrivals or undocumented — many private and state awards still apply.",
+  "Full-time student": "Generally enrolled in 12+ credits/semester (undergrad) or as defined by your school.",
+  "Part-time student": "Below the full-time credit threshold.",
+  Veteran: "Served in the U.S. armed forces; eligible for GI Bill and veteran-specific awards.",
+  "Military dependent": "Spouse or child of an active-duty, retired, or deceased service member.",
+};
+
+function GlossaryCheck({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  const gloss = GLOSSARY[label];
+  return (
+    <label className="inline-flex items-center gap-2 text-sm">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="size-4 accent-[oklch(0.32_0.09_270)]"
+      />
+      {gloss ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="border-b border-dotted border-muted-foreground/50 cursor-help">{label}</span>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs text-xs leading-relaxed">
+            {gloss}
+          </TooltipContent>
+        </Tooltip>
+      ) : (
+        <span>{label}</span>
+      )}
+    </label>
+  );
+}
+
+const EXTENDED_CONTEXT_GROUPS: { group: string; options: string[] }[] = [
+  { group: "Financial Need", options: ["Pell Grant eligible", "FAFSA completed", "Low-income background"] },
+  { group: "Student Background", options: ["First-generation college student", "Student with disability", "Foster care experience", "Student with dependents"] },
+  { group: "Citizenship / Residency Status", options: ["U.S. citizen", "Permanent resident", "International student", "DACA / undocumented student"] },
+  { group: "Enrollment Status", options: ["Full-time student", "Part-time student"] },
+  { group: "Military Affiliation", options: ["Veteran", "Military dependent"] },
+];
+
+/* ---------------- Step 2: Profile (with materials before story prompts) ---------------- */
 
 function StepProfile() {
   const { user, updateProfile } = useUser();
   const level = user?.educationLevel;
+  const [showExtended, setShowExtended] = useState(false);
 
   function set<K extends keyof UserProfile>(key: K, value: UserProfile[K]) {
     updateProfile({ [key]: value } as Partial<UserProfile>);
@@ -430,6 +477,28 @@ function StepProfile() {
   function setPrompts(patch: Record<string, unknown>) {
     updateProfile({ prompts: { ...(user?.prompts ?? {}), ...patch } });
   }
+  function setExt(key: string, v: boolean) {
+    updateProfile({ extendedContext: { ...(user?.extendedContext ?? {}), [key]: v } });
+  }
+
+  // documents
+  const docs = user?.documents ?? [];
+  function addDoc(kind: string, file: File) {
+    updateProfile({ documents: [...docs, { name: file.name, kind }] });
+  }
+  function removeDoc(name: string) {
+    updateProfile({ documents: docs.filter((d) => d.name !== name) });
+  }
+
+  const raceOptions = [
+    "American Indian or Alaska Native (Not Hispanic or Latino) (United States of America)",
+    "Asian (Not Hispanic or Latino) (United States of America)",
+    "Black or African American (Not Hispanic or Latino) (United States of America)",
+    "Native Hawaiian or Other Pacific Islander (Not Hispanic or Latino) (United States of America)",
+    "Not Specified (United States of America)",
+    "Two or More Races (Not Hispanic or Latino) (United States of America)",
+    "White (Not Hispanic or Latino) (United States of America)",
+  ];
 
   return (
     <div className="space-y-6">
@@ -450,6 +519,20 @@ function StepProfile() {
         <div className="grid sm:grid-cols-2 gap-3 mt-3">
           <Input label="Pronouns" value={user?.pronouns ?? ""} onChange={(v) => set("pronouns", v)} placeholder="she/her, he/him, they/them…" />
           <Input label="Location" value={user?.location ?? ""} onChange={(v) => set("location", v)} placeholder="City, State" />
+          <Input label="Nationality" value={user?.nationality ?? ""} onChange={(v) => set("nationality", v)} placeholder="e.g. American, Mexican, Nigerian…" />
+          <Select
+            label="Are you of Hispanic or Latino descent?"
+            value={user?.hispanicLatino ?? ""}
+            onChange={(v) => set("hispanicLatino", v)}
+            options={["Yes", "No"]}
+          />
+          <Select
+            label="Please select your Race / Ethnicity"
+            value={user?.raceEthnicity ?? ""}
+            onChange={(v) => set("raceEthnicity", v)}
+            options={raceOptions}
+            className="sm:col-span-2"
+          />
           <Input
             label="Career goal (1-2 sentences)"
             value={user?.careerGoal ?? ""}
@@ -458,10 +541,38 @@ function StepProfile() {
             className="sm:col-span-2"
           />
         </div>
-        <div className="mt-4 flex flex-wrap gap-4">
-          <Check label="First-generation college student" checked={!!user?.firstGen} onChange={(v) => set("firstGen", v)} />
-          <Check label="Pell-grant eligible" checked={!!user?.pellEligible} onChange={(v) => set("pellEligible", v)} />
+
+        <div className="mt-5 grid sm:grid-cols-2 gap-3">
+          <GlossaryCheck label="First-generation college student" checked={!!user?.firstGen} onChange={(v) => set("firstGen", v)} />
+          <GlossaryCheck label="Pell Grant eligible" checked={!!user?.pellEligible} onChange={(v) => set("pellEligible", v)} />
         </div>
+
+        <button
+          onClick={() => setShowExtended((s) => !s)}
+          className="mt-5 text-xs underline text-muted-foreground hover:text-foreground"
+        >
+          {showExtended ? "− Hide" : "+ Add more personalized context"}
+        </button>
+
+        {showExtended && (
+          <div className="mt-4 space-y-5">
+            {EXTENDED_CONTEXT_GROUPS.map((grp) => (
+              <div key={grp.group}>
+                <div className="text-[11px] uppercase tracking-widest text-gold">{grp.group}</div>
+                <div className="mt-2 grid sm:grid-cols-2 gap-2">
+                  {grp.options.map((opt) => (
+                    <GlossaryCheck
+                      key={opt}
+                      label={opt}
+                      checked={!!user?.extendedContext?.[opt]}
+                      onChange={(v) => setExt(opt, v)}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </Card>
 
       <Card>
@@ -504,6 +615,50 @@ function StepProfile() {
         </div>
       </Card>
 
+      {/* Materials/document vault moved here, before Story Prompts */}
+      <Card>
+        <SectionLabel>Upload materials</SectionLabel>
+        <p className="text-xs text-muted-foreground mt-1">
+          Build your document vault so each application can reuse them.
+        </p>
+        {docs.length > 0 && (
+          <div className="mt-4 divide-y divide-border">
+            {docs.map((d) => (
+              <div key={d.name} className="py-3 flex items-center gap-4">
+                <div className="size-10 rounded-lg bg-success/15 text-success grid place-items-center text-xs font-mono">✓</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium truncate">{d.name}</div>
+                  <div className="text-xs text-muted-foreground">{d.kind}</div>
+                </div>
+                <button
+                  onClick={() => removeDoc(d.name)}
+                  className="text-xs text-muted-foreground hover:text-destructive"
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="mt-5 grid sm:grid-cols-2 gap-3">
+          {["Resume", "Transcript", "Recommendation letter", "Other"].map((k) => (
+            <label key={k} className="rounded-xl border-2 border-dashed border-border p-4 text-sm cursor-pointer hover:bg-accent">
+              <div className="text-xs uppercase tracking-widest text-muted-foreground">Upload</div>
+              <div className="font-medium mt-1">{k}</div>
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx,.png,.jpg"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) addDoc(k, f);
+                }}
+                className="mt-2 text-xs"
+              />
+            </label>
+          ))}
+        </div>
+      </Card>
+
       <Card>
         <SectionLabel>Story prompts (optional)</SectionLabel>
         <p className="text-xs text-muted-foreground mt-1">
@@ -511,7 +666,7 @@ function StepProfile() {
         </p>
         <div className="mt-4 space-y-3">
           <Textarea label="Name a time you overcame a challenge." value={user?.prompts?.challenge ?? ""} onChange={(v) => setPrompts({ challenge: v })} />
-          <Textarea label="Name a time you had to be a leader." value={user?.prompts?.leadership ?? ""} onChange={(v) => setPrompts({ leadership: v })} />
+          <Textarea label="Leadership — describe a time you had to lead." value={user?.prompts?.leadership ?? ""} onChange={(v) => setPrompts({ leadership: v })} />
           <Textarea label="Name a time you worked with a team." value={user?.prompts?.teamwork ?? ""} onChange={(v) => setPrompts({ teamwork: v })} />
         </div>
       </Card>
@@ -569,14 +724,6 @@ function Select({
         <option value="">Select…</option>
         {options.map((o) => <option key={o} value={o}>{o}</option>)}
       </select>
-    </label>
-  );
-}
-function Check({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <label className="inline-flex items-center gap-2 text-sm">
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="size-4 accent-[oklch(0.32_0.09_270)]" />
-      <span>{label}</span>
     </label>
   );
 }
@@ -721,27 +868,36 @@ function GradForm({ value, setBranch, level }: { value: Record<string, unknown>;
   );
 }
 
+/* ---------------- Step 3: Discovery (shortened) ---------------- */
+
 function StepDiscovery() {
   const { user } = useUser();
   const ug = user?.undergrad;
   const hs = user?.highSchool;
   const gr = user?.graduate;
-  const major = ug?.major ?? hs?.intendedMajor ?? gr?.researchArea ?? "—";
-  const qs = [
-    { q: "Education level", a: user?.educationLevel ? eduLevelLabel(user.educationLevel) : "—" },
-    { q: "Major / focus", a: major },
-    { q: "Location", a: user?.location ?? "—" },
-    { q: "First-generation?", a: user?.firstGen ? "Yes" : "No" },
-    { q: "Financial need?", a: user?.pellEligible ? "Pell-eligible" : "—" },
-    { q: "Career interests", a: user?.careerGoal ?? "—" },
-  ];
+  const major = ug?.major ?? hs?.intendedMajor ?? gr?.researchArea;
+  const qs: { q: string; a: string }[] = [];
+  if (user?.educationLevel) qs.push({ q: "Education level", a: eduLevelLabel(user.educationLevel) });
+  if (major) qs.push({ q: "Major / focus", a: major });
+  if (user?.location) qs.push({ q: "Location", a: user.location });
+  if (user?.nationality) qs.push({ q: "Nationality", a: user.nationality });
+  if (user?.raceEthnicity) qs.push({ q: "Race / ethnicity", a: user.raceEthnicity });
+  if (user?.hispanicLatino) qs.push({ q: "Hispanic / Latino?", a: user.hispanicLatino });
+  if (user?.firstGen) qs.push({ q: "First-generation?", a: "Yes" });
+  if (user?.pellEligible) qs.push({ q: "Financial need?", a: "Pell-eligible" });
+  if (user?.careerGoal) qs.push({ q: "Career interests", a: user.careerGoal });
+
   return (
     <div className="grid md:grid-cols-2 gap-6">
-      <Card>
+      <Card className="self-start">
         <div className="text-xs uppercase tracking-widest text-muted-foreground">Your answers</div>
-        <div className="mt-3">
-          {qs.map((q) => <FieldRow key={q.q} label={q.q} value={q.a} />)}
-        </div>
+        {qs.length === 0 ? (
+          <div className="mt-3 text-sm text-muted-foreground">No profile data yet — fill out your profile first.</div>
+        ) : (
+          <div className="mt-3">
+            {qs.map((q) => <FieldRow key={q.q} label={q.q} value={q.a} />)}
+          </div>
+        )}
       </Card>
 
       <Card>
@@ -752,7 +908,7 @@ function StepDiscovery() {
           <Pill tone="info">Rule-based engine</Pill>
         </div>
         <p className="text-sm text-muted-foreground mt-2">
-          Curated for first-gen Latina CS undergrads in Texas. We don't scrape — we point you to the right places.
+          Curated based on your profile. We don't scrape — we point you to the right places.
         </p>
         <div className="mt-4 space-y-3">
           {discoveryResources.map((r) => (
@@ -773,18 +929,55 @@ function StepDiscovery() {
   );
 }
 
-function StepOpportunities() {
+/* ---------------- Step 4: Opportunities (sort + nav) ---------------- */
+
+function parseAmount(amount: string): number {
+  // grabs the largest dollar number in the string
+  const nums = amount.replace(/,/g, "").match(/\d+/g);
+  if (!nums) return 0;
+  return Math.max(...nums.map(Number));
+}
+
+function StepOpportunities({ onAnalyze }: { onAnalyze: () => void }) {
+  const [sort, setSort] = useState<"match" | "amount-desc" | "amount-asc">("match");
+  const sorted = useMemo(() => {
+    const arr = [...scholarships];
+    if (sort === "amount-desc") arr.sort((a, b) => parseAmount(b.amount) - parseAmount(a.amount));
+    else if (sort === "amount-asc") arr.sort((a, b) => parseAmount(a.amount) - parseAmount(b.amount));
+    else arr.sort((a, b) => b.matchScore - a.matchScore);
+    return arr;
+  }, [sort]);
+
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <Pill tone="gold">Match ≥ 80%</Pill>
-        <Pill>STEM</Pill>
-        <Pill>First-gen</Pill>
-        <Pill>Texas</Pill>
-        <Pill>Deadline ≤ 60 days</Pill>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div className="text-[11px] uppercase tracking-widest text-muted-foreground mb-2">
+            Based on your profile keywords:
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Pill tone="gold">Match ≥ 80%</Pill>
+            <Pill>STEM</Pill>
+            <Pill>First-gen</Pill>
+            <Pill>Texas</Pill>
+            <Pill>Deadline ≤ 60 days</Pill>
+          </div>
+        </div>
+        <label className="text-xs flex items-center gap-2 text-muted-foreground">
+          Sort by:
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as typeof sort)}
+            className="rounded-lg border border-border bg-background px-2 py-1.5 text-xs"
+          >
+            <option value="match">Best match</option>
+            <option value="amount-desc">Award amount (high → low)</option>
+            <option value="amount-asc">Award amount (low → high)</option>
+          </select>
+        </label>
       </div>
       <div className="grid md:grid-cols-2 gap-4">
-        {scholarships.map((s) => (
+        {sorted.map((s) => (
           <Card key={s.id} className="!p-5">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -803,10 +996,12 @@ function StepOpportunities() {
                 <div className="text-xs text-muted-foreground">{s.deadline}</div>
               </div>
               <button
+                onClick={() => s.eligibilityScore !== 0 && onAnalyze()}
+                disabled={s.eligibilityScore === 0}
                 className={`rounded-full px-3 py-1.5 text-xs ${
                   s.eligibilityScore === 0
                     ? "bg-destructive/15 text-destructive cursor-not-allowed"
-                    : "bg-primary text-primary-foreground"
+                    : "bg-primary text-primary-foreground hover:opacity-90"
                 }`}
               >
                 {s.eligibilityScore === 0 ? "Not eligible" : "Analyze →"}
@@ -838,6 +1033,8 @@ function MatchRing({ score }: { score: number }) {
     </div>
   );
 }
+
+/* ---------------- Step 5: Import ---------------- */
 
 function StepImport() {
   const [url, setUrl] = useState("https://shpe.org/scholarships/foundation-2026");
@@ -890,165 +1087,231 @@ function StepImport() {
   );
 }
 
-function StepRequirements() {
+/* ---------------- Step 6: Requirements + Fit combined ---------------- */
+
+function StepRequirementsAndFit() {
   const reqs = [
     { c: "Eligibility", items: ["Hispanic / Latinx heritage", "U.S. citizen or DACA", "Enrolled full-time", "STEM major", "Minimum 3.0 GPA"] },
     { c: "Required materials", items: ["Resume (PDF, ≤ 2 pages)", "Unofficial transcript", "Two recommendation letters", "FAFSA Student Aid Index"] },
     { c: "Essays", items: ["Personal essay — 500 words", "Short answer — community impact, 250 words"] },
     { c: "Deadlines", items: ["Application: Apr 30, 2026", "Recommender deadline: May 7, 2026"] },
   ];
+  const dims = [
+    { name: "Eligibility", score: 100, note: "You meet every required criterion." },
+    { name: "Academic strength", score: 92, note: "Your GPA is well above the minimum." },
+    { name: "Leadership evidence", score: 88, note: "Strong record; quantify hours where possible." },
+    { name: "Community impact", score: 90, note: "Your community work is a standout." },
+    { name: "Narrative alignment", score: 80, note: "Tie your goals more explicitly to the sponsor's mission." },
+  ];
+  const overall = Math.round(dims.reduce((a, d) => a + d.score, 0) / dims.length);
+
   return (
-    <div className="grid md:grid-cols-2 gap-4">
-      {reqs.map((r) => (
-        <Card key={r.c}>
-          <div className="text-xs uppercase tracking-widest text-gold">{r.c}</div>
-          <ul className="mt-3 space-y-2 text-sm">
-            {r.items.map((i) => (
-              <li key={i} className="flex items-start gap-2">
-                <span className="mt-1 size-1.5 rounded-full bg-primary shrink-0" />
-                <span>{i}</span>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      ))}
-      <Card className="md:col-span-2 bg-secondary/40">
+    <div className="space-y-6">
+      <div className="grid md:grid-cols-2 gap-4">
+        {reqs.map((r) => (
+          <Card key={r.c}>
+            <div className="text-xs uppercase tracking-widest text-gold">{r.c}</div>
+            <ul className="mt-3 space-y-2 text-sm">
+              {r.items.map((i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="mt-1 size-1.5 rounded-full bg-primary shrink-0" />
+                  <span>{i}</span>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        ))}
+      </div>
+
+      <Card className="bg-secondary/40">
         <div className="text-sm font-medium">Essay prompt</div>
         <p className="mt-2 text-foreground/90 font-display italic text-lg">"{essayPrompt}"</p>
       </Card>
-    </div>
-  );
-}
 
-function StepFit() {
-  const dims = [
-    { name: "Eligibility", score: 100, note: "You meet every required criterion." },
-    { name: "Academic strength", score: 92, note: "GPA 3.87 well above 3.0 minimum." },
-    { name: "Leadership evidence", score: 88, note: "Strong SHPE leadership; quantify hours." },
-    { name: "Community impact", score: 90, note: "Code-with-Me nights are a standout." },
-    { name: "Narrative alignment", score: 80, note: "Tie your goals more explicitly to SHPE's mission." },
-  ];
-  const overall = Math.round(dims.reduce((a, d) => a + d.score, 0) / dims.length);
-  return (
-    <div className="grid md:grid-cols-3 gap-6">
-      <Card className="md:col-span-1 flex flex-col items-center justify-center text-center">
-        <div className="text-xs uppercase tracking-widest text-muted-foreground">Overall fit</div>
-        <div className="relative mt-3 size-44">
-          <svg viewBox="0 0 100 100" className="size-44 -rotate-90">
-            <circle cx="50" cy="50" r="42" stroke="var(--border)" strokeWidth="8" fill="none" />
-            <circle
-              cx="50" cy="50" r="42"
-              stroke="var(--gold)" strokeWidth="8" fill="none" strokeLinecap="round"
-              strokeDasharray={`${(overall / 100) * 2 * Math.PI * 42} 999`}
-            />
-          </svg>
-          <div className="absolute inset-0 grid place-items-center">
-            <div>
-              <div className="font-display text-5xl">{overall}</div>
-              <div className="text-xs text-muted-foreground">/ 100</div>
+      <div className="grid md:grid-cols-3 gap-6">
+        <Card className="md:col-span-1 flex flex-col items-center justify-center text-center">
+          <div className="text-xs uppercase tracking-widest text-muted-foreground">Overall fit</div>
+          <div className="relative mt-3 size-44">
+            <svg viewBox="0 0 100 100" className="size-44 -rotate-90">
+              <circle cx="50" cy="50" r="42" stroke="var(--border)" strokeWidth="8" fill="none" />
+              <circle
+                cx="50" cy="50" r="42"
+                stroke="var(--gold)" strokeWidth="8" fill="none" strokeLinecap="round"
+                strokeDasharray={`${(overall / 100) * 2 * Math.PI * 42} 999`}
+              />
+            </svg>
+            <div className="absolute inset-0 grid place-items-center">
+              <div>
+                <div className="font-display text-5xl">{overall}</div>
+                <div className="text-xs text-muted-foreground">/ 100</div>
+              </div>
             </div>
           </div>
-        </div>
-        <Pill tone="success">Strong fit</Pill>
-        <p className="text-xs text-muted-foreground mt-3">
-          You'd be a competitive applicant. Focus on tightening your narrative.
-        </p>
-      </Card>
+          <Pill tone="success">Strong fit</Pill>
+        </Card>
 
-      <Card className="md:col-span-2">
-        <div className="text-xs uppercase tracking-widest text-muted-foreground">Dimension breakdown</div>
-        <div className="mt-4 space-y-4">
-          {dims.map((d) => (
-            <div key={d.name}>
-              <div className="flex items-baseline justify-between text-sm">
-                <span className="font-medium">{d.name}</span>
-                <span className="font-mono text-xs">{d.score}/100</span>
-              </div>
-              <div className="mt-1.5 h-1.5 rounded-full bg-secondary overflow-hidden">
-                <div className="h-full bg-gold transition-all" style={{ width: `${d.score}%` }} />
-              </div>
-              <div className="text-xs text-muted-foreground mt-1">{d.note}</div>
-            </div>
-          ))}
-        </div>
-        <div className="mt-6 rounded-xl border border-warning/30 bg-warning/10 p-3 text-sm">
-          <div className="font-medium">One gap to close</div>
-          <p className="text-foreground/80 mt-1">
-            Your second recommendation letter (Prof. Alvarez) hasn't been uploaded. Required for submission.
-          </p>
-        </div>
-      </Card>
-    </div>
-  );
-}
-
-function StepMaterials() {
-  const { user, updateProfile } = useUser();
-  const docs = user?.documents ?? [];
-
-  function addDoc(kind: string, file: File) {
-    updateProfile({ documents: [...docs, { name: file.name, kind }] });
-  }
-  function removeDoc(name: string) {
-    updateProfile({ documents: docs.filter((d) => d.name !== name) });
-  }
-
-  const kinds = ["Resume", "Transcript", "Recommendation letter", "Other"];
-
-  return (
-    <div className="space-y-4">
-      <Card>
-        <div className="text-xs uppercase tracking-widest text-muted-foreground">Your document vault</div>
-        {docs.length === 0 ? (
-          <div className="mt-4 text-sm text-muted-foreground">
-            No documents yet. Upload anything that supports your application — resume, transcript, recommendation letters.
-          </div>
-        ) : (
-          <div className="mt-4 divide-y divide-border">
-            {docs.map((d) => (
-              <div key={d.name} className="py-3 flex items-center gap-4">
-                <div className="size-10 rounded-lg bg-success/15 text-success grid place-items-center text-xs font-mono">✓</div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate">{d.name}</div>
-                  <div className="text-xs text-muted-foreground">{d.kind}</div>
+        <Card className="md:col-span-2">
+          <div className="text-xs uppercase tracking-widest text-muted-foreground">Dimension breakdown</div>
+          <div className="mt-4 space-y-4">
+            {dims.map((d) => (
+              <div key={d.name}>
+                <div className="flex items-baseline justify-between text-sm">
+                  <span className="font-medium">{d.name}</span>
+                  <span className="font-mono text-xs">{d.score}/100</span>
                 </div>
-                <button
-                  onClick={() => removeDoc(d.name)}
-                  className="text-xs text-muted-foreground hover:text-destructive"
-                >
-                  Remove
-                </button>
+                <div className="mt-1.5 h-1.5 rounded-full bg-secondary overflow-hidden">
+                  <div className="h-full bg-gold transition-all" style={{ width: `${d.score}%` }} />
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">{d.note}</div>
               </div>
             ))}
           </div>
-        )}
+        </Card>
+      </div>
+    </div>
+  );
+}
 
-        <div className="mt-5 grid sm:grid-cols-2 gap-3">
-          {kinds.map((k) => (
-            <label key={k} className="rounded-xl border-2 border-dashed border-border p-4 text-sm cursor-pointer hover:bg-accent">
-              <div className="text-xs uppercase tracking-widest text-muted-foreground">Upload</div>
-              <div className="font-medium mt-1">{k}</div>
-              <input
-                type="file"
-                accept=".pdf,.doc,.docx,.png,.jpg"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) addDoc(k, f);
-                }}
-                className="mt-2 text-xs"
-              />
-            </label>
+/* ---------------- Step 7: Personalized Outline ---------------- */
+
+function StepEssayOutline() {
+  const { user } = useUser();
+  const focus =
+    user?.undergrad?.major ?? user?.highSchool?.intendedMajor ?? user?.graduate?.researchArea ?? "your field";
+  const leadership = user?.prompts?.leadership || user?.optional?.societyInvolvement || "a leadership moment from your profile";
+  const challenge = user?.prompts?.challenge || "a specific challenge you've overcome";
+
+  const outline = [
+    {
+      h: "Hook (60–80 words)",
+      d: `Open with a vivid scene from ${challenge}. Use one sensory detail (sound, smell, image) — avoid generalities.`,
+    },
+    {
+      h: "Bridge to identity (80–100 words)",
+      d: `Connect that moment to who you are and why ${focus} matters to you. One concrete fact from your profile beats three abstract claims.`,
+    },
+    {
+      h: "Leadership / impact (120–150 words)",
+      d: `Anchor on ${leadership}. Quantify: how many people, hours, dollars, or outcomes? Name one person whose story changed because of you.`,
+    },
+    {
+      h: "Sponsor alignment (80–100 words)",
+      d: `Tie your goals to the sponsor's mission. Name a specific program, value, or initiative — show you read their site.`,
+    },
+    {
+      h: "Closer (40–60 words)",
+      d: `End on a forward-looking sentence — what you'll build, contribute, or pay forward. Avoid "Thank you for your consideration."`,
+    },
+  ];
+  return (
+    <div className="space-y-6">
+      <Card className="bg-secondary/40">
+        <div className="text-xs uppercase tracking-widest text-muted-foreground">Essay prompt</div>
+        <p className="mt-2 font-display italic text-lg">"{essayPrompt}"</p>
+      </Card>
+
+      <Card>
+        <div className="flex items-center gap-3">
+          <div className="size-9 rounded-full bg-gold text-gold-foreground grid place-items-center">✎</div>
+          <div>
+            <div className="font-medium">Personalized outline based on your profile</div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Use this as a scaffold — every sentence is still yours to write.
+            </p>
+          </div>
+        </div>
+        <ol className="mt-5 space-y-4">
+          {outline.map((o, i) => (
+            <li key={o.h} className="rounded-xl border border-border p-4">
+              <div className="flex items-baseline justify-between">
+                <div className="font-display text-lg">{i + 1}. {o.h}</div>
+              </div>
+              <p className="text-sm text-muted-foreground mt-1.5">{o.d}</p>
+            </li>
           ))}
+        </ol>
+      </Card>
+
+      <Card className="bg-primary/5 border-primary/30">
+        <div className="text-sm">
+          <span className="font-medium">Ready?</span>{" "}
+          <span className="text-muted-foreground">Continue to the next step to upload or paste your draft.</span>
         </div>
       </Card>
     </div>
   );
 }
+
+/* ---------------- Step 8: Essay Upload (paste OR PDF) ---------------- */
 
 function StepEssayUpload() {
   const { user, updateProfile } = useUser();
   const draft = user?.essayDraft ?? "";
   const wordCount = draft.trim() ? draft.trim().split(/\s+/).length : 0;
+  const [pdfStatus, setPdfStatus] = useState<string | null>(null);
+
+  async function handlePdf(file: File) {
+    setPdfStatus(`Extracting text from ${file.name}…`);
+    try {
+      const w = window as unknown as {
+        pdfjsLib?: {
+          GlobalWorkerOptions?: { workerSrc?: string };
+          getDocument: (opts: { data: ArrayBuffer }) => { promise: Promise<PdfDoc> };
+        };
+      };
+      type PdfDoc = {
+        numPages: number;
+        getPage: (n: number) => Promise<{
+          getTextContent: () => Promise<{ items: { str?: string }[] }>;
+        }>;
+      };
+
+      if (!w.pdfjsLib) {
+        await new Promise<void>((resolve, reject) => {
+          const s = document.createElement("script");
+          s.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.mjs";
+          s.type = "module";
+          s.onload = () => resolve();
+          s.onerror = () => reject(new Error("Failed to load PDF parser"));
+          document.head.appendChild(s);
+        });
+      }
+      if (!w.pdfjsLib) throw new Error("PDF parser unavailable");
+      if (w.pdfjsLib.GlobalWorkerOptions) {
+        w.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.mjs";
+      }
+
+      const buf = await file.arrayBuffer();
+      const pdf: PdfDoc = await w.pdfjsLib.getDocument({ data: buf }).promise;
+      let full = "";
+      for (let p = 1; p <= pdf.numPages; p++) {
+        const page = await pdf.getPage(p);
+        const tc = await page.getTextContent();
+        full += tc.items.map((i) => i.str ?? "").join(" ") + "\n\n";
+      }
+      updateProfile({ essayDraft: full.trim() });
+      setPdfStatus(`Imported ${pdf.numPages} pages from ${file.name}.`);
+    } catch (e) {
+      setPdfStatus(`Could not parse PDF: ${(e as Error).message}`);
+    }
+  }
+
+
+  function saveAsDraft() {
+    const prev = user?.drafts ?? [];
+    const nextVersion = (prev[prev.length - 1]?.version ?? 0) + 1;
+    const score = mockScoreForDraft(draft);
+    const newDraft: EssayDraft = {
+      id: crypto.randomUUID(),
+      version: nextVersion,
+      content: draft,
+      wordCount,
+      score,
+      savedAt: new Date().toISOString(),
+    };
+    updateProfile({ drafts: [...prev, newDraft] });
+  }
 
   return (
     <div className="space-y-6">
@@ -1056,13 +1319,30 @@ function StepEssayUpload() {
         <div className="text-xs uppercase tracking-widest text-muted-foreground">Essay prompt</div>
         <p className="mt-2 font-display italic text-lg">"{essayPrompt}"</p>
         <p className="mt-2 text-xs text-muted-foreground">
-          You can paste any essay draft you're working on — Scholar-E will coach it without rewriting it.
+          Paste your draft below — or upload a PDF and we'll pull the text out for you.
         </p>
       </Card>
+
+      <Card>
+        <SectionLabel>Upload a PDF (optional)</SectionLabel>
+        <div className="mt-2 flex items-center gap-3 rounded-lg border-2 border-dashed border-border p-4">
+          <input
+            type="file"
+            accept="application/pdf,.pdf"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handlePdf(f);
+            }}
+            className="text-sm"
+          />
+          {pdfStatus && <span className="text-xs text-muted-foreground">{pdfStatus}</span>}
+        </div>
+      </Card>
+
       <Card>
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span className="font-mono">your-essay-draft.txt</span>
-          <span>{wordCount} words · Draft v1</span>
+          <span>{wordCount} words · Draft v{(user?.drafts?.length ?? 0) + 1}</span>
         </div>
         <textarea
           value={draft}
@@ -1072,55 +1352,51 @@ function StepEssayUpload() {
           className="mt-3 w-full rounded-lg border border-border bg-background p-4 font-display text-[15px] leading-relaxed"
         />
       </Card>
+
       <Card>
-        <button
-          disabled={wordCount < 30}
-          className="w-full rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium hover:opacity-90 disabled:opacity-40"
-        >
-          {wordCount < 30 ? "Write at least a paragraph to send to the coach" : "Send to AI Coach for evaluation →"}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={saveAsDraft}
+            disabled={wordCount < 30}
+            className="rounded-full bg-card border border-border px-4 py-2 text-sm hover:bg-accent disabled:opacity-40"
+          >
+            Save as new draft
+          </button>
+          <button
+            disabled={wordCount < 30}
+            className="flex-1 rounded-full bg-primary text-primary-foreground py-2 text-sm font-medium hover:opacity-90 disabled:opacity-40"
+          >
+            {wordCount < 30 ? "Write at least a paragraph to send to the coach" : "Send to AI Coach for evaluation →"}
+          </button>
+        </div>
       </Card>
     </div>
   );
 }
 
-function StepAIEvaluate() {
-  const stages = [
-    "Reading prompt and rubric",
-    "Cross-referencing your profile",
-    "Scoring clarity, specificity, leadership, storytelling, impact",
-    "Checking alignment with SHPE values",
-    "Generating actionable highlights",
-  ];
-  return (
-    <Card>
-      <div className="flex items-center gap-3">
-        <div className="size-10 rounded-full bg-gold text-gold-foreground grid place-items-center font-display">AI</div>
-        <div>
-          <div className="font-medium">Scholar-E Coach is reviewing your essay…</div>
-          <div className="text-xs text-muted-foreground">Powered by the LangGraph evaluate_draft node</div>
-        </div>
-      </div>
-      <div className="mt-6 space-y-3">
-        {stages.map((s, i) => (
-          <div key={s} className="flex items-center gap-3 text-sm">
-            <div className={`size-6 rounded-full grid place-items-center text-[11px] font-mono ${i < 4 ? "bg-success/20 text-success" : "bg-secondary"}`}>
-              {i < 4 ? "✓" : "…"}
-            </div>
-            <div className={i < 4 ? "" : "text-muted-foreground"}>{s}</div>
-            {i === 4 && <div className="flex-1 ml-2 h-1 rounded-full ai-shimmer" />}
-          </div>
-        ))}
-      </div>
-      <div className="mt-6 text-xs text-muted-foreground italic">
-        Reminder: we don't rewrite your essay. We point out what to improve — you make the change.
-      </div>
-    </Card>
-  );
+function mockScoreForDraft(text: string): number {
+  // crude deterministic mock — longer + more varied draft = higher score
+  const wc = text.trim() ? text.trim().split(/\s+/).length : 0;
+  const variety = new Set(text.toLowerCase().match(/\w+/g) ?? []).size;
+  const base = Math.min(95, 40 + Math.round(wc / 12) + Math.round(variety / 8));
+  return Math.max(45, Math.min(95, base));
 }
 
+/* ---------------- Step 9: Application Evaluation (combined eval + scores) ---------------- */
+
+const SCORE_DESCRIPTIONS: Record<string, string> = {
+  Clarity: "How easily a reader can follow your argument and identify each sentence's purpose.",
+  Specificity: "Concrete sensory details, names, numbers, and moments instead of vague generalities.",
+  Leadership: "Evidence you initiated something, organized people, or carried responsibility — not just participated.",
+  Storytelling: "Pacing, scene-building, and emotional arc — does the essay carry the reader through a change?",
+  Impact: "Quantified outcomes (people helped, dollars raised, lives changed) and what the reader can verify.",
+  "Scholarship alignment": "How clearly your goals and identity match the sponsor's stated mission and values.",
+  Grammar: "Sentence-level correctness, punctuation, and consistent verb tense.",
+  Structure: "Paragraph order, transitions, and a strong opener / closer.",
+};
+
 function StepScores() {
-  const cats = [
+  const cats: { name: keyof typeof SCORE_DESCRIPTIONS; score: number }[] = [
     { name: "Clarity", score: 78 },
     { name: "Specificity", score: 54 },
     { name: "Leadership", score: 86 },
@@ -1131,8 +1407,35 @@ function StepScores() {
     { name: "Structure", score: 75 },
   ];
   const overall = Math.round(cats.reduce((a, c) => a + c.score, 0) / cats.length);
+  const [open, setOpen] = useState<string | null>(null);
+  const stages = [
+    "Reading prompt and rubric",
+    "Cross-referencing your profile",
+    "Scoring clarity, specificity, leadership, storytelling, impact",
+    "Checking alignment with sponsor values",
+    "Generating actionable highlights",
+  ];
+
   return (
     <div className="space-y-6">
+      <Card>
+        <div className="flex items-center gap-3">
+          <div className="size-10 rounded-full bg-gold text-gold-foreground grid place-items-center font-display">AI</div>
+          <div>
+            <div className="font-medium">Scholar-E Coach evaluated your essay</div>
+            <div className="text-xs text-muted-foreground">All five evaluation stages complete.</div>
+          </div>
+        </div>
+        <div className="mt-4 grid sm:grid-cols-5 gap-2 text-xs">
+          {stages.map((s) => (
+            <div key={s} className="rounded-lg bg-success/10 text-success p-2 flex items-center gap-1.5">
+              <span className="font-mono">✓</span>
+              <span className="truncate">{s}</span>
+            </div>
+          ))}
+        </div>
+      </Card>
+
       <Card className="grid md:grid-cols-3 gap-6 items-center">
         <div className="md:col-span-1 text-center">
           <div className="font-display text-7xl text-primary">{overall}</div>
@@ -1140,23 +1443,35 @@ function StepScores() {
           <Pill tone="warn">Promising — needs revision</Pill>
         </div>
         <div className="md:col-span-2 grid sm:grid-cols-2 gap-3">
-          {cats.map((c) => (
-            <div key={c.name}>
-              <div className="flex items-baseline justify-between text-sm">
-                <span>{c.name}</span>
-                <span className="font-mono text-xs">{c.score}</span>
-              </div>
-              <div className="mt-1 h-1.5 rounded-full bg-secondary overflow-hidden">
-                <div
-                  className="h-full"
-                  style={{
-                    width: `${c.score}%`,
-                    background: c.score >= 80 ? "var(--success)" : c.score >= 65 ? "var(--gold)" : "var(--warning)",
-                  }}
-                />
-              </div>
-            </div>
-          ))}
+          {cats.map((c) => {
+            const isOpen = open === c.name;
+            return (
+              <button
+                key={c.name}
+                onClick={() => setOpen(isOpen ? null : c.name)}
+                className="text-left rounded-xl border border-border hover:bg-accent transition-colors p-3"
+              >
+                <div className="flex items-baseline justify-between text-sm">
+                  <span className="border-b border-dotted border-muted-foreground/50">{c.name}</span>
+                  <span className="font-mono text-xs">{c.score}</span>
+                </div>
+                <div className="mt-1 h-1.5 rounded-full bg-secondary overflow-hidden">
+                  <div
+                    className="h-full"
+                    style={{
+                      width: `${c.score}%`,
+                      background: c.score >= 80 ? "var(--success)" : c.score >= 65 ? "var(--gold)" : "var(--warning)",
+                    }}
+                  />
+                </div>
+                {isOpen && (
+                  <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                    {SCORE_DESCRIPTIONS[c.name]}
+                  </p>
+                )}
+              </button>
+            );
+          })}
         </div>
       </Card>
 
@@ -1164,18 +1479,21 @@ function StepScores() {
         <div className="text-xs uppercase tracking-widest text-muted-foreground">Top three things to fix</div>
         <ol className="mt-3 space-y-3 text-sm">
           <li className="flex gap-3"><span className="font-display text-gold">1.</span> Replace 4 vague phrases with concrete sensory details.</li>
-          <li className="flex gap-3"><span className="font-display text-gold">2.</span> Quantify the impact of your Code-with-Me nights.</li>
-          <li className="flex gap-3"><span className="font-display text-gold">3.</span> Strengthen your closing line to reinforce contribution to SHPE.</li>
+          <li className="flex gap-3"><span className="font-display text-gold">2.</span> Quantify the impact of your community work.</li>
+          <li className="flex gap-3"><span className="font-display text-gold">3.</span> Strengthen your closing line to reinforce contribution to the sponsor.</li>
         </ol>
       </Card>
     </div>
   );
 }
 
+/* ---------------- Step 10: Highlights (accept/decline) ---------------- */
+
 function StepHighlights() {
-  // Render the essay with inline highlights tied to feedback.
   const segments = useMemo(() => buildHighlightedSegments(essayDraft, essayFeedback), []);
   const [active, setActive] = useState<number>(0);
+  const [decisions, setDecisions] = useState<Record<number, "accepted" | "declined">>({});
+
   return (
     <div className="grid lg:grid-cols-5 gap-6">
       <Card className="lg:col-span-3">
@@ -1194,6 +1512,10 @@ function StepHighlights() {
                 className={`rounded px-0.5 underline decoration-2 underline-offset-4 transition-colors ${
                   active === seg.fbIndex
                     ? "bg-gold/60 decoration-gold"
+                    : decisions[seg.fbIndex!] === "accepted"
+                    ? "bg-success/30 decoration-success"
+                    : decisions[seg.fbIndex!] === "declined"
+                    ? "bg-muted decoration-muted-foreground line-through"
                     : "bg-gold/25 decoration-gold/60 hover:bg-gold/40"
                 }`}
               >
@@ -1205,7 +1527,12 @@ function StepHighlights() {
       </Card>
 
       <Card className="lg:col-span-2 h-fit sticky top-24">
-        <FeedbackCard idx={active} />
+        <FeedbackCard
+          idx={active}
+          decision={decisions[active]}
+          onAccept={() => setDecisions((d) => ({ ...d, [active]: "accepted" }))}
+          onDecline={() => setDecisions((d) => ({ ...d, [active]: "declined" }))}
+        />
         <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
           {essayFeedback.map((_, i) => (
             <button
@@ -1224,7 +1551,17 @@ function StepHighlights() {
   );
 }
 
-function FeedbackCard({ idx }: { idx: number }) {
+function FeedbackCard({
+  idx,
+  decision,
+  onAccept,
+  onDecline,
+}: {
+  idx: number;
+  decision?: "accepted" | "declined";
+  onAccept: () => void;
+  onDecline: () => void;
+}) {
   const f = essayFeedback[idx];
   const tone =
     f.severity === "high" ? "danger" : f.severity === "medium" ? "warn" : "info";
@@ -1241,8 +1578,32 @@ function FeedbackCard({ idx }: { idx: number }) {
       </blockquote>
       <div className="mt-3 text-sm">{f.note}</div>
       <div className="mt-3 rounded-xl border border-border bg-secondary/50 p-3 text-sm">
-        <div className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Suggested rewrite — yours to accept or ignore</div>
+        <div className="text-xs uppercase tracking-widest text-muted-foreground mb-1">
+          Suggested rewrite
+        </div>
         <div className="italic text-foreground/90">"{f.suggestion}"</div>
+        <div className="mt-3 flex gap-2">
+          <button
+            onClick={onAccept}
+            className={`rounded-full px-3 py-1.5 text-xs ${
+              decision === "accepted"
+                ? "bg-success text-white"
+                : "bg-primary text-primary-foreground hover:opacity-90"
+            }`}
+          >
+            {decision === "accepted" ? "✓ Accepted" : "Accept"}
+          </button>
+          <button
+            onClick={onDecline}
+            className={`rounded-full px-3 py-1.5 text-xs border ${
+              decision === "declined"
+                ? "bg-destructive/15 text-destructive border-destructive/30"
+                : "border-border hover:bg-accent"
+            }`}
+          >
+            {decision === "declined" ? "Declined" : "Decline"}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -1267,50 +1628,131 @@ function buildHighlightedSegments(text: string, feedback: typeof essayFeedback) 
   return segs;
 }
 
+/* ---------------- Step 11: Revise — multiple drafts ---------------- */
+
 function StepRevise() {
-  const revised = `Growing up in McAllen, Texas, I didn't know what an engineer was until I was fifteen. My parents work at a small restaurant; the closest thing I had to a computer was a shared family phone. Some nights I did homework on the restaurant counter between checking out tables, my AP Calc book stained with red salsa.
+  const { user, updateProfile } = useUser();
+  const drafts = user?.drafts ?? [];
+  const current = user?.essayDraft ?? "";
+  const [openId, setOpenId] = useState<string | null>(null);
+  const opened = drafts.find((d) => d.id === openId);
 
-In tenth grade, my school got a grant for Chromebooks and I checked one out from the library every single day. I taught myself Python from free YouTube videos while my mom prepped for the next day's lunch service. The first time my script printed the right answer to a problem, I yelled loud enough that my mom came running.
+  function addDraft() {
+    if (!current.trim()) return;
+    const nextVersion = (drafts[drafts.length - 1]?.version ?? 0) + 1;
+    const score = mockScoreForDraft(current);
+    const wc = current.trim() ? current.trim().split(/\s+/).length : 0;
+    const next: EssayDraft = {
+      id: crypto.randomUUID(),
+      version: nextVersion,
+      content: current,
+      wordCount: wc,
+      score,
+      savedAt: new Date().toISOString(),
+    };
+    updateProfile({ drafts: [...drafts, next] });
+  }
 
-When I got to Rice, I felt very behind — most of my classmates had been coding since middle school. I almost dropped CS after my first COMP 215 midterm. Then I joined SHPE. Ana, a junior, slid her own midterm across the table — a 62 — and said, "You don't quit because of one number."
+  function deleteDraft(id: string) {
+    updateProfile({ drafts: drafts.filter((d) => d.id !== id) });
+    if (openId === id) setOpenId(null);
+  }
 
-Now I tutor intro CS students who feel the way I felt. I also run Code-with-Me nights for high schoolers in McAllen ISD. Three of those students applied to college this fall — two to Rice — and one told me she's majoring in CS because of those Tuesday nights.
-
-If I receive this scholarship, I'll use it to attend SHPE National and continue my research on machine learning for early diabetes screening, a disease that affects nearly 1 in 4 adults in my hometown. SHPE was the room that kept me in engineering. I'd like the chance to keep building that room for the students coming up behind me.`;
-  return (
-    <div className="grid lg:grid-cols-2 gap-4">
-      <Card>
-        <div className="text-xs uppercase tracking-widest text-muted-foreground">Draft v1 — original</div>
-        <pre className="mt-3 whitespace-pre-wrap font-display text-sm leading-relaxed text-foreground/60 max-h-[480px] overflow-y-auto">
-{essayDraft}
-        </pre>
-      </Card>
-      <Card>
-        <div className="text-xs uppercase tracking-widest text-gold">Draft v2 — Maya's revision</div>
-        <pre className="mt-3 whitespace-pre-wrap font-display text-sm leading-relaxed text-foreground max-h-[480px] overflow-y-auto">
-{revised}
-        </pre>
-      </Card>
-      <Card className="lg:col-span-2 bg-secondary/40">
-        <div className="flex items-center gap-3">
-          <div className="size-8 rounded-full bg-gold text-gold-foreground grid place-items-center text-sm">✎</div>
-          <div className="text-sm">
-            <span className="font-medium">Maya wrote every word of v2.</span>{" "}
-            <span className="text-muted-foreground">Scholar-E suggested rewrites — she rephrased them in her own voice.</span>
-          </div>
-        </div>
-      </Card>
-    </div>
-  );
-}
-
-function StepResubmit() {
   return (
     <div className="space-y-6">
       <Card>
         <div className="flex items-center justify-between">
           <div>
-            <div className="font-display text-2xl">Resubmitting draft v2…</div>
+            <SectionLabel>Your drafts</SectionLabel>
+            <p className="text-xs text-muted-foreground mt-1">
+              {drafts.length} saved · click any version to read it and see its score.
+            </p>
+          </div>
+          <button
+            onClick={addDraft}
+            disabled={!current.trim()}
+            className="rounded-full bg-primary text-primary-foreground px-4 py-2 text-sm hover:opacity-90 disabled:opacity-40"
+          >
+            + Save current as new draft
+          </button>
+        </div>
+
+        {drafts.length === 0 ? (
+          <div className="mt-4 text-sm text-muted-foreground">
+            No drafts saved yet — write something in Step 8 and save it as a draft.
+          </div>
+        ) : (
+          <div className="mt-4 grid sm:grid-cols-2 gap-3">
+            {drafts.map((d) => {
+              const isOpen = openId === d.id;
+              return (
+                <button
+                  key={d.id}
+                  onClick={() => setOpenId(isOpen ? null : d.id)}
+                  className={`text-left rounded-xl border p-4 transition-colors ${
+                    isOpen ? "border-primary bg-primary/5" : "border-border hover:bg-accent"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="font-display text-lg">Draft v{d.version}</div>
+                    <Pill tone={d.score && d.score >= 80 ? "success" : "warn"}>
+                      Score {d.score ?? "—"}
+                    </Pill>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {d.wordCount} words · saved {new Date(d.savedAt).toLocaleString()}
+                  </div>
+                  <p className="text-xs text-foreground/70 mt-2 line-clamp-2">{d.content.slice(0, 160)}…</p>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </Card>
+
+      <Card>
+        <div className="flex items-center justify-between">
+          <SectionLabel>
+            {opened ? `Draft v${opened.version}` : "Current working draft"}
+          </SectionLabel>
+          {opened && (
+            <button
+              onClick={() => deleteDraft(opened.id)}
+              className="text-xs text-muted-foreground hover:text-destructive"
+            >
+              Delete draft
+            </button>
+          )}
+        </div>
+        <pre className="mt-3 whitespace-pre-wrap font-display text-sm leading-relaxed text-foreground max-h-[480px] overflow-y-auto">
+{opened ? opened.content : current || "(Your current draft is empty.)"}
+        </pre>
+        {opened && (
+          <div className="mt-3 text-xs text-muted-foreground">
+            Score: <span className="font-mono">{opened.score}</span> · {opened.wordCount} words
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+/* ---------------- Step 12: Resubmit — with improvement tips ---------------- */
+
+function StepResubmit() {
+  const tips = [
+    "Replace any remaining vague phrases (e.g. 'I really liked it') with one concrete sensory detail.",
+    "Quantify outcomes — number of people helped, dollars raised, hours invested.",
+    "Name at least one specific person, place, or program from the sponsor's mission.",
+    "Tighten the closing line so it commits to what you'll contribute, not just thank-you.",
+    "Read your essay aloud once — cut any sentence that doesn't earn its space.",
+  ];
+  return (
+    <div className="space-y-6">
+      <Card>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="font-display text-2xl">Resubmitting your latest draft…</div>
             <div className="text-xs text-muted-foreground mt-1">SHPE Foundation Scholarship · 498 / 500 words</div>
           </div>
           <Pill tone="info">2nd evaluation</Pill>
@@ -1334,10 +1776,23 @@ function StepResubmit() {
           </div>
         </div>
       </Card>
+
+      <Card>
+        <div className="text-xs uppercase tracking-widest text-gold">Ways to improve your score further</div>
+        <ul className="mt-3 space-y-3 text-sm">
+          {tips.map((t, i) => (
+            <li key={t} className="flex gap-3">
+              <span className="font-display text-gold shrink-0">{i + 1}.</span>
+              <span>{t}</span>
+            </li>
+          ))}
+        </ul>
+      </Card>
+
       <Card className="bg-success/10 border-success/30">
         <div className="text-sm font-medium text-success">Coach says: ready to submit.</div>
         <p className="text-sm text-foreground/80 mt-1">
-          Your essay clears every SHPE rubric threshold. Continue to the final submission check.
+          Your essay clears every rubric threshold. Continue to the final submission check.
         </p>
       </Card>
     </div>
@@ -1356,6 +1811,8 @@ function ScoreDelta({ label, before, after }: { label: string; before: number; a
     </div>
   );
 }
+
+/* ---------------- Step 13: Final Check ---------------- */
 
 function StepFinalCheck() {
   const done = submissionChecklist.filter((x) => x.done).length;
@@ -1392,16 +1849,18 @@ function StepFinalCheck() {
       <Card className="bg-warning/10 border-warning/30">
         <div className="text-sm font-medium">Two blockers before you submit:</div>
         <ul className="mt-2 list-disc pl-5 text-sm text-foreground/80 space-y-1">
-          <li>Email Prof. Alvarez a reminder about her recommendation letter.</li>
-          <li>Confirm your mailing address in the SHPE applicant portal.</li>
+          <li>Email your second recommender a reminder about their letter.</li>
+          <li>Confirm your mailing address in the sponsor's applicant portal.</li>
         </ul>
         <button className="mt-4 rounded-full bg-primary text-primary-foreground px-5 py-2 text-sm">
-          Email Prof. Alvarez (template ready)
+          Email recommender (template ready)
         </button>
       </Card>
     </div>
   );
 }
+
+/* ---------------- Step 14: Tracker ---------------- */
 
 function StepTracker() {
   const columns = ["Interested", "Drafting", "Submitted", "Awarded"] as const;
@@ -1413,7 +1872,7 @@ function StepTracker() {
   };
   const totalPotential = scholarships
     .filter((s) => s.eligibilityScore > 0)
-    .reduce((a) => a + 5000, 0); // rough demo number
+    .reduce((a) => a + 5000, 0);
 
   return (
     <div className="space-y-6">
@@ -1452,8 +1911,7 @@ function StepTracker() {
       <Card className="bg-primary text-primary-foreground">
         <div className="font-display text-2xl">That's the full Scholar-E journey.</div>
         <p className="text-primary-foreground/80 mt-2 text-sm">
-          From a confused first-gen sophomore landing on the homepage, to a competitive applicant with a draft
-          v2 scoring 87/100 — all without anyone writing her essay for her.
+          From landing on the homepage to a polished, sponsor-aligned submission — all without anyone writing your essay for you.
         </p>
         <Link to="/" className="mt-4 inline-flex rounded-full bg-gold text-gold-foreground px-5 py-2 text-sm font-medium">
           ← Back to landing
