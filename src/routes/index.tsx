@@ -205,12 +205,11 @@ function StudentDemo() {
             essay — and see exactly what your scholarship workflow will feel like.
           </p>
         </div>
-        <div className="md:col-span-8 grid sm:grid-cols-2 gap-3">
+        <div className="md:col-span-8 grid sm:grid-cols-3 gap-3">
           {[
             { t: "Create your account", d: "Email + password, or sign in with Google." },
-            { t: "Build your profile", d: "Branching questions based on your education level — only what's relevant to you." },
-            { t: "Add the optional context", d: "Resume, societies, sports, articles, projects — only what you choose." },
-            { t: "Paste your real essay", d: "Get clarity, specificity, and impact coaching — you keep authorship." },
+            { t: "Build your profile", d: "Branching questions based on your education level — plus optional context like resume, societies, sports, articles, and projects." },
+            { t: "Personalized Coaching", d: "Get clarity, specificity, and impact coaching on your real essay — you keep authorship." },
           ].map((s, i) => (
             <div key={s.t} className="rounded-2xl border border-border bg-secondary/40 p-5">
               <div className="font-mono text-xs text-gold">0{i + 1}</div>
@@ -218,7 +217,7 @@ function StudentDemo() {
               <p className="text-sm text-muted-foreground mt-1">{s.d}</p>
             </div>
           ))}
-          <div className="sm:col-span-2 flex items-center justify-end">
+          <div className="sm:col-span-3 flex items-center justify-end">
             <Link
               to={isAuthenticated ? "/journey" : "/auth"}
               className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-2.5 text-sm font-medium hover:opacity-90"
