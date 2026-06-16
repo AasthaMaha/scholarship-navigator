@@ -70,6 +70,15 @@ export type PromptAnswers = {
   teamwork?: string;
 };
 
+export type EssayDraft = {
+  id: string;
+  version: number;
+  content: string;
+  wordCount: number;
+  score?: number;
+  savedAt: string;
+};
+
 export type UserProfile = {
   // account
   name: string;
@@ -77,9 +86,14 @@ export type UserProfile = {
   // universal
   pronouns?: string;
   location?: string;
+  nationality?: string;
+  raceEthnicity?: string;
+  hispanicLatino?: string;
   identity?: string[];
   firstGen?: boolean;
   pellEligible?: boolean;
+  // extended context checkboxes (key -> bool)
+  extendedContext?: Record<string, boolean>;
   careerGoal?: string;
   // branching
   educationLevel?: EducationLevel;
@@ -90,8 +104,10 @@ export type UserProfile = {
   optional?: OptionalSections;
   // prompts
   prompts?: PromptAnswers;
-  // essay
+  // essay (current working draft)
   essayDraft?: string;
+  // versioned drafts
+  drafts?: EssayDraft[];
   // documents
   documents?: { name: string; kind: string }[];
 };
