@@ -201,8 +201,8 @@ function StudentDemo() {
             Walk through the journey <span className="italic">as yourself</span>.
           </h2>
           <p className="text-sm text-muted-foreground">
-            No persona, no dummy data. Create an account, fill in your real profile, paste your real
-            essay — and see exactly what your scholarship workflow will feel like.
+            Create an account, fill in your real profile, paste your real essay — and see exactly
+            what your scholarship workflow will feel like.
           </p>
         </div>
         <div className="md:col-span-8 grid sm:grid-cols-3 gap-3">
