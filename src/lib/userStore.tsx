@@ -59,6 +59,7 @@ export type GradProfile = {
 export type OptionalSections = {
   resumeFileName?: string;
   societyInvolvement?: string;
+  leadership?: string;
   sports?: string;
   articlesPublished?: string;
   projects?: string;
