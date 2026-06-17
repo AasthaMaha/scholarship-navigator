@@ -309,33 +309,7 @@ function StepLand() {
   ];
   return (
     <div className="space-y-6">
-      <Card className="!p-0 overflow-hidden">
-        <div className="p-8 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
-          <div className="text-xs uppercase tracking-widest opacity-70">scholar-e.app</div>
-          <h2 className="font-display text-3xl md:text-4xl mt-2 text-balance">
-            Win scholarships in your own voice.
-          </h2>
-          <p className="mt-3 text-primary-foreground/80 max-w-xl">
-            A coach that helps you discover, analyze, write, and submit — without writing your essays for you.
-          </p>
-          <div className="mt-5 flex gap-2">
-            <span className="rounded-full bg-gold text-gold-foreground px-4 py-2 text-sm font-medium">
-              Get started — free
-            </span>
-            <span className="rounded-full border border-primary-foreground/30 px-4 py-2 text-sm">
-              I'm a parent
-            </span>
-          </div>
-        </div>
-        <div className="p-6 grid sm:grid-cols-3 gap-4 text-sm">
-          {["Discover", "Analyze", "Coach"].map((t, i) => (
-            <div key={t} className="rounded-xl bg-secondary/60 p-4">
-              <div className="font-mono text-xs text-gold">0{i + 1}</div>
-              <div className="font-display text-lg mt-1">{t}</div>
-            </div>
-          ))}
-        </div>
-      </Card>
+
 
       <Card>
         <div className="text-xs uppercase tracking-widest text-muted-foreground">Quick onboarding — 3 things to know</div>
@@ -603,12 +577,8 @@ function StepProfile() {
           All optional — add whatever helps scholarships see who you are.
         </p>
         <div className="mt-4 space-y-3">
-          <FileField
-            label="Resume (optional)"
-            fileName={user?.optional?.resumeFileName}
-            onFile={(name) => setOptional({ resumeFileName: name })}
-          />
-          <Textarea label="Society / club involvement" value={user?.optional?.societyInvolvement ?? ""} onChange={(v) => setOptional({ societyInvolvement: v })} placeholder="Clubs, organizations, leadership roles…" />
+          <Textarea label="Society / club involvement" value={user?.optional?.societyInvolvement ?? ""} onChange={(v) => setOptional({ societyInvolvement: v })} placeholder="Clubs, organizations, roles…" />
+          <Textarea label="Leadership experience" value={user?.optional?.leadership ?? ""} onChange={(v) => setOptional({ leadership: v })} placeholder="Captain, president, lead organizer, founder…" />
           <Textarea label="Sports" value={user?.optional?.sports ?? ""} onChange={(v) => setOptional({ sports: v })} placeholder="Teams, varsity/club, captaincy…" />
           <Textarea label="Articles published" value={user?.optional?.articlesPublished ?? ""} onChange={(v) => setOptional({ articlesPublished: v })} placeholder="Titles, outlets, links…" />
           <Textarea label="Projects" value={user?.optional?.projects ?? ""} onChange={(v) => setOptional({ projects: v })} placeholder="Personal, school, or research projects…" />
