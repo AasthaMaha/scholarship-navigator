@@ -308,34 +308,47 @@ function StepLand() {
     },
   ];
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      <div>
+        <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Step 01 · Discover</div>
+        <h2 className="font-display text-3xl md:text-4xl mt-2 text-balance">
+          Welcome to Scholar-E.
+        </h2>
+        <p className="mt-3 text-muted-foreground max-w-xl">
+          A quick three-minute orientation before you build your profile. No fluff — just the basics.
+        </p>
+      </div>
 
+      <div className="grid md:grid-cols-3 gap-4">
+        {slides.map((s, i) => (
+          <div
+            key={s.t}
+            className="rounded-2xl border border-border bg-card p-6 hover:border-foreground/20 transition-colors"
+          >
+            <div className="font-mono text-xs text-muted-foreground">0{i + 1}</div>
+            <div className="font-display text-lg mt-3 leading-snug">{s.t}</div>
+            <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{s.d}</p>
+          </div>
+        ))}
+      </div>
 
-      <Card>
-        <div className="text-xs uppercase tracking-widest text-muted-foreground">Quick onboarding — 3 things to know</div>
-        <div className="mt-3 grid md:grid-cols-3 gap-4">
-          {slides.map((s, i) => (
-            <div key={s.t} className="rounded-xl border border-border bg-secondary/40 p-5">
-              <div className="font-mono text-xs text-gold">0{i + 1}</div>
-              <div className="font-display text-lg mt-2">{s.t}</div>
-              <p className="text-sm text-muted-foreground mt-2">{s.d}</p>
-            </div>
-          ))}
-        </div>
-        <div className="mt-5 space-y-2">
-          <label className="flex items-center gap-3">
-            <input type="checkbox" defaultChecked className="size-4 accent-[oklch(0.32_0.09_270)]" />
-            <span className="text-sm">I understand Scholar-E is a coach, not a ghostwriter.</span>
+      <div className="rounded-2xl border border-border bg-secondary/30 p-6">
+        <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Before you continue</div>
+        <div className="mt-4 space-y-3">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input type="checkbox" defaultChecked className="size-4 mt-0.5 accent-[oklch(0.32_0.09_270)]" />
+            <span className="text-sm leading-relaxed">Scholar-E is a coach, not a ghostwriter.</span>
           </label>
-          <label className="flex items-center gap-3">
-            <input type="checkbox" defaultChecked className="size-4 accent-[oklch(0.32_0.09_270)]" />
-            <span className="text-sm">I'll keep my essays in my own voice and authorship.</span>
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input type="checkbox" defaultChecked className="size-4 mt-0.5 accent-[oklch(0.32_0.09_270)]" />
+            <span className="text-sm leading-relaxed">My essays will stay in my own voice and authorship.</span>
           </label>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }
+
 
 function SidebarUser() {
   const { user } = useUser();
